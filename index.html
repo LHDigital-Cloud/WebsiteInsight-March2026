@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lotus Hyundai — SEO Intelligence Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM SANS:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════ LIGHT THEME ══════════════════════ */
+:root{
+  --bg:#f0f4f8;
+  --bg2:#e8edf3;
+  --surface:#ffffff;
+  --surface2:#f5f7fa;
+  --surface3:#edf0f5;
+  --border:#d8e1eb;
+  --border2:#c5d2e0;
+  --accent:#0066cc;
+  --accent2:#004fa3;
+  --accentl:rgba(0,102,204,.08);
+  --gold:#d97b00;
+  --goldl:rgba(217,123,0,.1);
+  --text:#0f1c2e;
+  --text2:#374151;
+  --muted:#6b7f96;
+  --muted2:#8fa0b3;
+  --green:#007a52;
+  --greenl:rgba(0,122,82,.08);
+  --red:#cc1a2e;
+  --redl:rgba(204,26,46,.08);
+  --warn:#b45309;
+  --warnl:rgba(180,83,9,.08);
+  --shadow:0 1px 4px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.05);
+  --shadow-hover:0 4px 12px rgba(0,0,0,.1),0 8px 28px rgba(0,0,0,.07);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+
+/* ── LOADER ── */
+#loader{position:fixed;inset:0;z-index:9999;background:#f0f4f8;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;}
+.lotus-petal{transform-origin:center;opacity:0;}
+.loader-brand{font-family:'DM SANS',sans-serif;font-size:1.55rem;font-weight:800;letter-spacing:.22em;color:var(--accent);opacity:0;text-transform:uppercase;}
+.loader-sub{font-size:.72rem;letter-spacing:.3em;color:var(--muted);opacity:0;text-transform:uppercase;}
+.lbar-wrap{width:200px;height:2px;background:var(--border);border-radius:2px;overflow:hidden;opacity:0;}
+.lbar{height:100%;width:0%;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:2px;}
+
+/* ── APP ── */
+#app{opacity:0;transition:opacity .6s ease;display:flex;flex-direction:column;min-height:100vh;}
+#app.visible{opacity:1;}
+
+/* ── TOPBAR ── */
+
+.topbar{position:sticky;top:0;z-index:200;background:rgba(255,255,255,.96);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);height:60px;display:flex;align-items:center;padding:0 1.75rem;gap:1.5rem;box-shadow:0 1px 0 var(--border),0 2px 12px rgba(0,0,0,.04);}
+.tlogo{font-family:'DM SANS',sans-serif;font-size:1rem;font-weight:800;letter-spacing:.1em;display:flex;align-items:center;gap:8px;white-space:nowrap;flex-shrink:0;color:var(--accent2);}
+.ldot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px rgba(0,102,204,.4);animation:glow 2s infinite;}
+@keyframes glow{0%,100%{box-shadow:0 0 6px rgba(0,102,204,.3);}50%{box-shadow:0 0 16px rgba(0,102,204,.6),0 0 32px rgba(0,102,204,.2);}}
+.nav-tabs{display:flex;align-items:center;gap:3px;flex:1;overflow-x:auto;scrollbar-width:none;}
+.nav-tabs::-webkit-scrollbar{display:none;}
+.ntab{font-family:'DM SANS',sans-serif;font-size:.64rem;letter-spacing:.1em;text-transform:uppercase;padding:6px 14px;border-radius:7px;border:1px solid transparent;color:var(--muted);cursor:pointer;white-space:nowrap;transition:all .2s;background:none;}
+.ntab:hover{color:var(--accent);background:var(--accentl);border-color:rgba(0,102,204,.15);}
+.ntab.active{color:var(--accent);background:var(--accentl);border-color:rgba(0,102,204,.25);font-weight:600;}
+.tdate{font-size:.62rem;color:var(--muted);white-space:nowrap;flex-shrink:0;background:var(--surface2);padding:4px 10px;border-radius:20px;border:1px solid var(--border);}
+
+/* ── PAGES ── */
+.dpage{display:none;flex:1;}
+.dpage.active{display:block;}
+.pw{padding:2rem;max-width:1440px;margin:0 auto;}
+
+/* ── SECTION LABEL ── */
+.sl{font-family:'DM SANS',sans-serif;font-size:.58rem;letter-spacing:.3em;color:var(--muted2);text-transform:uppercase;margin-bottom:1rem;display:flex;align-items:center;gap:8px;}
+.sl::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* ── CARD ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.25rem;position:relative;overflow:hidden;transition:border-color .25s,transform .25s,box-shadow .25s;box-shadow:var(--shadow);}
+.card:hover{transform:translateY(-3px);border-color:rgba(0,102,204,.2);box-shadow:var(--shadow-hover);}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(0,102,204,.35),transparent);opacity:0;transition:opacity .25s;}
+.card:hover::before{opacity:1;}
+
+/* ── SKELETON ── */
+.sk{background:linear-gradient(90deg,var(--surface) 25%,var(--surface3) 50%,var(--surface) 75%);background-size:200% 100%;animation:shim 1.5s infinite;border-radius:6px;}
+@keyframes shim{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+
+/* ── GRIDS ── */
+.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;margin-bottom:2rem;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem;}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:2rem;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:2rem;}
+@media(max-width:1200px){.g5{grid-template-columns:repeat(3,1fr);}.g4{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:900px){.g3,.g2{grid-template-columns:1fr;}.g4{grid-template-columns:1fr;}}
+@media(max-width:700px){.g5{grid-template-columns:1fr 1fr;}}
+
+/* ── SIGNAL BADGES ── */
+.sig{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:.61rem;font-weight:600;font-family:'DM SANS',sans-serif;letter-spacing:.03em;}
+.sig.green{background:var(--greenl);color:var(--green);border:1px solid rgba(0,122,82,.2);}
+.sig.red{background:var(--redl);color:var(--red);border:1px solid rgba(204,26,46,.2);}
+.sig.warn{background:var(--warnl);color:var(--warn);border:1px solid rgba(180,83,9,.2);}
+.sig.blue{background:var(--accentl);color:var(--accent);border:1px solid rgba(0,102,204,.2);}
+.sdot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.sig.green .sdot{background:var(--green);}
+.sig.red .sdot{background:var(--red);}
+.sig.warn .sdot{background:var(--warn);}
+.sig.blue .sdot{background:var(--accent);}
+
+/* ── PROOF BTN ── */
+.pb{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:7px;border:1px solid rgba(0,102,204,.2);background:var(--accentl);color:var(--accent);font-size:.61rem;font-family:'DM SANS',sans-serif;letter-spacing:.07em;cursor:pointer;transition:all .2s;text-decoration:none;font-weight:600;}
+.pb:hover{background:rgba(0,102,204,.14);border-color:rgba(0,102,204,.35);transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,102,204,.15);}
+
+/* ── KW TABLE ── */
+.kwt{width:100%;border-collapse:collapse;font-size:.72rem;}
+.kwt th{font-family:'DM SANS',sans-serif;font-size:.54rem;letter-spacing:.14em;color:var(--muted2);text-align:left;padding:6px 7px;border-bottom:2px solid var(--border);}
+.kwt td{padding:7px 7px;border-bottom:1px solid var(--border);color:var(--text2);}
+.kwt tr:hover td{background:var(--accentl);}
+.pb2{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:5px;font-size:.63rem;font-weight:700;font-family:'DM SANS',sans-serif;}
+.pb2.p1{background:var(--greenl);color:var(--green);}
+.pb2.p23{background:var(--accentl);color:var(--accent);}
+.pb2.p45{background:var(--goldl);color:var(--gold);}
+.pb2.ph{background:var(--redl);color:var(--red);}
+
+/* ── PAGE ITEM ── */
+.pi{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:.7rem;}
+.pi:last-child{border:none;}
+.pu{flex:1;color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-decoration:none;transition:color .2s;}
+.pu:hover{color:var(--accent2);}
+.pp{font-family:'DM SANS',sans-serif;font-size:.65rem;color:var(--muted);min-width:30px;text-align:right;}
+.pbw{width:52px;height:3px;background:var(--border);border-radius:2px;}
+.pbf{height:100%;border-radius:2px;}
+
+/* ── IMPACT BAR ── */
+.ib{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--border);font-size:.7rem;}
+.ib:last-child{border:none;}
+.ib-l{flex:1;color:var(--text2);}
+.ib-bw{width:90px;height:5px;background:var(--surface3);border-radius:3px;}
+.ib-b{height:100%;border-radius:3px;}
+.ib-v{font-family:'DM SANS',sans-serif;font-size:.67rem;font-weight:700;min-width:52px;text-align:right;}
+
+/* ── HERO BANNER ── */
+.hero{background:linear-gradient(135deg,var(--surface) 60%,#eef4fb);border:1px solid var(--border);border-radius:18px;padding:1.75rem 2rem;margin-bottom:2rem;display:flex;align-items:center;justify-content:space-between;gap:2rem;position:relative;overflow:hidden;box-shadow:var(--shadow);}
+.hero::before{content:'';position:absolute;top:-60px;right:-60px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(0,102,204,.06),transparent 70%);pointer-events:none;}
+.hero::after{content:'';position:absolute;bottom:-40px;right:80px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(0,102,204,.04),transparent 70%);pointer-events:none;}
+.htitle{font-family:'DM SANS',sans-serif;font-size:1.42rem;font-weight:800;line-height:1.2;margin-bottom:.5rem;color:var(--text);}
+.hsub{font-size:.75rem;color:var(--muted);max-width:520px;line-height:1.7;}
+.hstats{display:flex;gap:2rem;flex-shrink:0;}
+.hsv{font-family:'DM SANS',sans-serif;font-size:1.65rem;font-weight:800;line-height:1;}
+.hsl{font-size:.58rem;color:var(--muted);letter-spacing:.1em;margin-top:3px;text-transform:uppercase;}
+
+/* ── CHART ── */
+.ct{font-family:'DM SANS',sans-serif;font-size:.75rem;font-weight:700;letter-spacing:.06em;margin-bottom:2px;color:var(--text);}
+.cs{font-size:.62rem;color:var(--muted);margin-bottom:1rem;}
+
+/* ── OWN SOURCE HERO ── */
+.oh{background:linear-gradient(135deg,#f0f7ff,#e8f2fb);border:1px solid rgba(0,102,204,.2);border-radius:18px;padding:2rem;margin-bottom:2rem;display:flex;align-items:center;gap:2rem;flex-wrap:wrap;box-shadow:var(--shadow);}
+.oh-badge{background:var(--accent);color:#fff;font-family:'DM SANS',sans-serif;font-size:.56rem;letter-spacing:.15em;padding:3px 10px;border-radius:20px;text-transform:uppercase;display:inline-block;margin-bottom:6px;}
+
+/* ── FOOTER ── */
+footer{background:var(--surface);border-top:1px solid var(--border);padding:1.75rem 2rem;margin-top:auto;}
+.fi{max-width:1440px;margin:0 auto;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:2rem;}
+.flogo{font-family:'DM SANS',sans-serif;font-size:.88rem;font-weight:800;letter-spacing:.1em;color:var(--accent2);display:flex;align-items:center;gap:8px;}
+.fnote{font-size:.62rem;color:var(--muted);line-height:1.7;text-align:center;}
+.flinks{display:flex;gap:1rem;justify-content:flex-end;flex-wrap:wrap;}
+.flink{font-size:.62rem;color:var(--muted);text-decoration:none;letter-spacing:.07em;transition:color .2s;}
+.flink:hover{color:var(--accent);}
+.fcopy{font-size:.58rem;color:var(--muted2);margin-top:5px;text-align:right;letter-spacing:.06em;}
+@media(max-width:700px){.fi{grid-template-columns:1fr;text-align:center;}.flinks{justify-content:center;}.fcopy{text-align:center;}}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
+::-webkit-scrollbar-thumb:hover{background:var(--muted2);}
+
+/* ── DIVIDER ── */
+.divr{height:1px;background:var(--border);margin:12px 0;}
+
+/* ── PHASE CARD ── */
+.phase-card{background:var(--surface2);border-radius:12px;padding:1rem;border-top:3px solid var(--c);border:1px solid var(--border);border-top-width:3px;}
+</style>
+</head>
+<body>
+
+<!-- ═══ LOADER ═══ -->
+<div id="loader">
+  <svg width="200" height="170" viewBox="0 0 220 180" fill="none">
+    <g id="lp1" class="lotus-petal"><ellipse cx="110" cy="100" rx="14" ry="46" fill="url(#lg1)" transform="rotate(-60 110 100)"/></g>
+    <g id="lp2" class="lotus-petal"><ellipse cx="110" cy="100" rx="14" ry="46" fill="url(#lg2)" transform="rotate(-30 110 100)"/></g>
+    <g id="lp3" class="lotus-petal"><ellipse cx="110" cy="100" rx="14" ry="46" fill="url(#lg3)"/></g>
+    <g id="lp4" class="lotus-petal"><ellipse cx="110" cy="100" rx="14" ry="46" fill="url(#lg4)" transform="rotate(30 110 100)"/></g>
+    <g id="lp5" class="lotus-petal"><ellipse cx="110" cy="100" rx="14" ry="46" fill="url(#lg5)" transform="rotate(60 110 100)"/></g>
+    <circle id="lcc" cx="110" cy="100" r="0" fill="url(#lcg)"/>
+    <circle id="lr1" cx="110" cy="100" r="40" stroke="rgba(0,102,204,0.25)" stroke-width="1" fill="none" opacity="0"/>
+    <circle id="lr2" cx="110" cy="100" r="40" stroke="rgba(0,102,204,0.12)" stroke-width="1" fill="none" opacity="0"/>
+    <defs>
+      <linearGradient id="lg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0066cc" stop-opacity=".9"/><stop offset="100%" stop-color="#0044aa" stop-opacity=".3"/></linearGradient>
+      <linearGradient id="lg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2288ee" stop-opacity=".85"/><stop offset="100%" stop-color="#0055bb" stop-opacity=".2"/></linearGradient>
+      <linearGradient id="lg3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#44aaff" stop-opacity=".9"/><stop offset="100%" stop-color="#0066cc" stop-opacity=".25"/></linearGradient>
+      <linearGradient id="lg4" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2288ee" stop-opacity=".85"/><stop offset="100%" stop-color="#0055bb" stop-opacity=".2"/></linearGradient>
+      <linearGradient id="lg5" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0066cc" stop-opacity=".9"/><stop offset="100%" stop-color="#0044aa" stop-opacity=".3"/></linearGradient>
+      <radialGradient id="lcg"><stop offset="0%" stop-color="#fff"/><stop offset="100%" stop-color="#0066cc"/></radialGradient>
+    </defs>
+  </svg>
+  <div class="loader-brand" id="lb1">LOTUS HYUNDAI</div>
+  <div class="loader-sub" id="lb2">SEO Intelligence Dashboard</div>
+  <div class="lbar-wrap" id="lb3"><div class="lbar" id="lb4"></div></div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div id="app">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="tlogo">
+      <div class="ldot"></div>
+      LOTUS HYUNDAI
+    </div>
+    <div class="nav-tabs">
+      <button class="ntab active" onclick="SP('national',this)">🌐 National Competitors</button>
+      <button class="ntab" onclick="SP('local',this)">🏙️ Local Competitors</button>
+      <button class="ntab" onclick="SP('hyperlocal',this)">📍 Hyperlocal</button>
+      <button class="ntab" onclick="SP('own',this)">🏠 Own Source</button>
+    </div>
+    <div class="tdate" id="td"></div>
+  </div>
+
+  <!-- ══════════════════════════════
+       PAGE 1 — NATIONAL COMPETITORS
+  ══════════════════════════════ -->
+  <div class="dpage active" id="page-national">
+    <div class="pw">
+      <div class="hero">
+        <div>
+          <div class="htitle">National Brand SEO Landscape</div>
+          <div class="hsub">Organic traffic across India's top 5 auto brands. Tata leads with 3.3M visits — 40% of total segment traffic. Hyundai.com/in underperforms significantly vs. market share. Competitor model pages drive 10–38% of all traffic — a replicable local strategy for Lotus Hyundai.</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;">
+            <span class="sig red"><span class="sdot"></span>Hyundai National Underperforming</span>
+            <span class="sig green"><span class="sdot"></span>Tata Model Pages = Blueprint</span>
+            <span class="sig warn"><span class="sdot"></span>All Brand KWs Rank #1</span>
+          </div>
+        </div>
+        <div class="hstats">
+          <div style="text-align:center;"><div class="hsv" style="color:var(--accent);">8.3M</div><div class="hsl">Total Traffic</div></div>
+          <div style="text-align:center;"><div class="hsv" style="color:var(--gold);">$270K</div><div class="hsl">Total Value</div></div>
+          <div style="text-align:center;"><div class="hsv" style="color:var(--green);">5</div><div class="hsl">Brands</div></div>
+        </div>
+      </div>
+      <div class="sl">Brand Traffic Overview</div>
+      <div class="g5" id="nCards"></div>
+      <div class="sl">Traffic &amp; Value Charts</div>
+      <div class="g2"><div class="card" style="min-height:280px;" id="nBar"></div><div class="card" style="min-height:280px;" id="nDonut"></div></div>
+      <div class="g2"><div class="card" id="nVal"></div><div class="card" id="nRank"></div></div>
+      <div class="sl">Top Ranking Keywords</div>
+      <div class="g2" id="nKw"></div>
+      <div class="sl">Top Performing Pages</div>
+      <div class="g3" id="nPages"></div>
+      <div class="sl">Strategic Impact for Lotus Hyundai</div>
+      <div class="g2" id="nImpact"></div>
+      <div class="sl">Geographic Distribution</div>
+      <div class="g5" id="nCtry"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════
+       PAGE 2 — LOCAL COMPETITORS
+  ══════════════════════════════ -->
+  <div class="dpage" id="page-local">
+    <div class="pw">
+      <div class="hero">
+        <div>
+          <div class="htitle">Local Coimbatore Competitors</div>
+          <div class="hsub">Chandra Hyundai &amp; Kovai Hyundai are direct dealership rivals in Coimbatore. <strong style="color:var(--red);">Neither has a standalone website.</strong> Both operate entirely on hyundaimotor.in subdomains — unable to build independent domain authority. Lotus Hyundai can immediately exploit this structural gap.</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;">
+            <span class="sig green"><span class="sdot"></span>No Competitor Standalone Sites</span>
+            <span class="sig green"><span class="sdot"></span>Combined Traffic Only 215</span>
+            <span class="sig red"><span class="sdot"></span>Chandra Ranks #3 Service Center KW</span>
+            <span class="sig warn"><span class="sdot"></span>Kovai Targets Showroom KWs</span>
+          </div>
+        </div>
+        <div class="hstats">
+          <div style="text-align:center;"><div class="hsv" style="color:var(--accent);">215</div><div class="hsl">Combined Traffic</div></div>
+          <div style="text-align:center;"><div class="hsv" style="color:var(--gold);">$27</div><div class="hsl">Combined Value</div></div>
+          <div style="text-align:center;"><div class="hsv" style="color:var(--green);">2</div><div class="hsl">Competitors</div></div>
+        </div>
+      </div>
+      <div class="sl">Competitor Overview</div>
+      <div class="g2" id="lCards"></div>
+      <div class="sl">Keyword Rankings</div>
+      <div class="g2" id="lKw"></div>
+      <div class="sl">Top Pages</div>
+      <div class="g2" id="lPages"></div>
+      <div class="sl">Pros, Cons &amp; Impact Analysis</div>
+      <div class="g2" id="lImpact"></div>
+      <div class="sl">Head-to-Head Comparison</div>
+      <div class="card" id="lCompare" style="margin-bottom:2rem;overflow-x:auto;"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════
+       PAGE 3 — HYPERLOCAL
+  ══════════════════════════════ -->
+  <div class="dpage" id="page-hyperlocal">
+    <div class="pw">
+      <div class="hero">
+        <div>
+          <div class="htitle">Hyperlocal SEO — Coimbatore</div>
+          <div class="hsub">Three standalone hyperlocal domains compete for Coimbatore Hyundai searches. <strong style="color:var(--red);">Lotus's own hyperlocal site (lotus-hyundai-coimbatore.com) has just 1 visit/month</strong> — compared to Kovai's 10. All sites rank positions 7–8. The first site to add content and links wins this micro-market completely.</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;">
+            <span class="sig red"><span class="sdot"></span>Lotus Hyperlocal = 1 Visit — CRITICAL</span>
+            <span class="sig warn"><span class="sdot"></span>Kovai Leads at 10 Visits</span>
+            <span class="sig green"><span class="sdot"></span>All Positions 7–8 — Winnable</span>
+          </div>
+        </div>
+        <div class="hstats">
+          <div style="text-align:center;"><div class="hsv" style="color:var(--accent);">14</div><div class="hsl">Total Traffic</div></div>
+          <div style="text-align:center;"><div class="hsv" style="color:var(--gold);">$5.09</div><div class="hsl">Total Value</div></div>
+          <div style="text-align:center;"><div class="hsv" style="color:var(--red);">3</div><div class="hsl">Hyperlocal Sites</div></div>
+        </div>
+      </div>
+      <div class="sl">Hyperlocal Site Cards</div>
+      <div class="g3" id="hlCards"></div>
+      <div class="sl">Keyword Positions</div>
+      <div class="g3" id="hlKw"></div>
+      <div class="sl">Top Pages</div>
+      <div class="g3" id="hlPages"></div>
+      <div class="sl">Impact Analysis &amp; Recommendations</div>
+      <div class="g2" id="hlImpact"></div>
+      <div class="sl">Traffic Comparison Chart</div>
+      <div class="card" id="hlChart" style="margin-bottom:2rem;min-height:200px;"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════
+       PAGE 4 — OWN SOURCE
+  ══════════════════════════════ -->
+  <div class="dpage" id="page-own">
+    <div class="pw">
+      <div class="oh">
+        <svg width="100" height="100" viewBox="0 0 100 100" style="flex-shrink:0;">
+          <circle cx="50" cy="50" r="42" fill="none" stroke="#dce8f5" stroke-width="8"/>
+          <circle cx="50" cy="50" r="42" fill="none" stroke="url(#sg)" stroke-width="8" stroke-linecap="round"
+            stroke-dasharray="263.9" stroke-dashoffset="131" transform="rotate(-90 50 50)" id="scoreArc"/>
+          <text x="50" y="46" text-anchor="middle" font-family="DM SANS,sans-serif" font-size="17" font-weight="800" fill="#0066cc">50%</text>
+          <text x="50" y="60" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="7" fill="#6b7f96">SEO HEALTH</text>
+          <defs>
+            <linearGradient id="sg" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#004fa3"/>
+              <stop offset="100%" stop-color="#0066cc"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div style="flex:1;">
+          <div class="oh-badge">Own Source · lotushyundai.in</div>
+          <div style="font-family:'DM SANS',sans-serif;font-size:1.35rem;font-weight:800;margin-bottom:.4rem;color:var(--text);">lotushyundai.in — Official Website</div>
+          <div style="font-size:.76rem;color:var(--muted);line-height:1.7;max-width:600px;">Lotus Hyundai's own dedicated website. With <strong style="color:var(--text);">444 organic visits/month</strong> and traffic value of <strong style="color:var(--text);">$17</strong>, this is the strongest own-source in the analysis and shows a <strong style="color:var(--green);">sharp upward growth trend</strong> since January. The Creta and Venue on-road price pages are driving majority of traffic — model-level content is working.</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;">
+            <span class="sig green"><span class="sdot"></span>444 Organic Visits/Month</span>
+            <span class="sig green"><span class="sdot"></span>Strong Upward Growth Trend</span>
+            <span class="sig green"><span class="sdot"></span>Model Price Pages Working</span>
+            <span class="sig warn"><span class="sdot"></span>Positions 4–9 — Room to Reach Top 3</span>
+            <span class="sig blue"><span class="sdot"></span>100% India Traffic</span>
+          </div>
+        </div>
+      </div>
+      <div class="sl">Performance Metrics</div>
+      <div class="g4" id="oStats"></div>
+      <div class="sl">Keyword Rankings &amp; Gaps</div>
+      <div class="g2" id="oKw"></div>
+      <div class="sl">Top Pages &amp; Missing Pages</div>
+      <div class="g2" id="oPages"></div>
+      <div class="sl">SEO Health Scorecard &amp; Pros / Cons</div>
+      <div class="g2" id="oScore"></div>
+      <div class="sl">90-Day Action Plan</div>
+      <div class="card" id="oAction" style="margin-bottom:2rem;"></div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="fi">
+      <div class="flogo">
+        <svg width="18" height="18" viewBox="0 0 26 26" fill="none">
+          <ellipse cx="13" cy="13" rx="4" ry="10" fill="rgba(0,102,204,.6)" transform="rotate(-30 13 13)"/>
+          <ellipse cx="13" cy="13" rx="4" ry="10" fill="rgba(0,102,204,.6)"/>
+          <ellipse cx="13" cy="13" rx="4" ry="10" fill="rgba(0,102,204,.6)" transform="rotate(30 13 13)"/>
+          <circle cx="13" cy="13" r="3" fill="#0066cc"/>
+        </svg>
+        LOTUS HYUNDAI
+      </div>
+      <div class="fnote">
+        SEO Intelligence Dashboard &nbsp;·&nbsp; Data Source: Ahrefs SEO Toolbar<br>
+        Coimbatore Automotive Market &nbsp;·&nbsp; India Region Analysis
+      </div>
+      <div>
+        
+        <div class="fcopy">© 2026 LOTUS HYUNDAI · ALL RIGHTS RESERVED · Developed by  DHARUN KUMAR(SEO ANALYST)</div>
+      </div>
+    </div>
+  </footer>
+</div><!-- /app -->
+
+<script>
+/* ═══════════════ DATE ═══════════════ */
+document.getElementById('td').textContent = new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
+
+/* ═══════════════ LOADER ═══════════════ */
+let prog=0; const lb=document.getElementById('lb4');
+const bi=setInterval(()=>{prog=Math.min(prog+(Math.random()*4+1),95);lb.style.width=prog+'%';},80);
+anime({targets:'.lotus-petal',opacity:[0,1],scaleY:[0.2,1],delay:anime.stagger(120),duration:700,easing:'easeOutBack'});
+anime({targets:'#lcc',r:[0,8],duration:600,delay:800,easing:'easeOutElastic(1,.6)'});
+anime({targets:'#lr1',opacity:[0,1],r:[40,62],duration:800,delay:900,easing:'easeOutCubic'});
+anime({targets:'#lr2',opacity:[0,.8],r:[40,78],duration:900,delay:1100,easing:'easeOutCubic'});
+anime({targets:'#lb1',opacity:[0,1],translateY:[10,0],duration:600,delay:500,easing:'easeOutCubic'});
+anime({targets:'#lb2',opacity:[0,1],translateY:[10,0],duration:600,delay:700,easing:'easeOutCubic'});
+anime({targets:'#lb3',opacity:[0,1],duration:400,delay:900});
+setTimeout(()=>{
+  clearInterval(bi); lb.style.width='100%';
+  setTimeout(()=>{
+    const l=document.getElementById('loader');
+    anime({targets:l,opacity:[1,0],duration:500,easing:'easeInCubic',complete:()=>{
+      l.style.display='none';
+      document.getElementById('app').classList.add('visible');
+      initAll();
+    }});
+  },400);
+},2800);
+
+/* ═══════════════ NAV ═══════════════ */
+function SP(id,el){
+  document.querySelectorAll('.dpage').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  el.classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ═══════════════ CHART DEFAULTS (light) ═══════════════ */
+const CO={
+  plugins:{
+    legend:{labels:{color:'#6b7f96',font:{family:'DM Sans',size:10},boxWidth:10,padding:12}},
+    tooltip:{backgroundColor:'#fff',borderColor:'#d8e1eb',borderWidth:1,titleColor:'#0f1c2e',bodyColor:'#6b7f96',padding:10,boxShadow:'0 4px 16px rgba(0,0,0,.1)'}
+  },
+  scales:{
+    x:{grid:{color:'rgba(0,0,0,.04)'},ticks:{color:'#6b7f96',font:{family:'DM Sans',size:11}}},
+    y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{color:'#6b7f96',font:{family:'DM Sans',size:11}}}
+  }
+};
+
+/* ═══════════════ DATA ═══════════════ */
+const NAT=[
+  {id:'tata',name:'Tata Motors',url:'https://cars.tatamotors.com/',c:'#0099cc',tr:3.3,trR:'3.3M',val:'$84.2K',valN:84.2,in:98,us:1,uae:0,uk:0,ca:0,rank:1,
+   kw:[{k:'tata punch',p:1,v:'722K'},{k:'tata sierra',p:1,v:'1.5M'},{k:'tata nexon',p:1,v:'502K'},{k:'tata',p:1,v:'246K'},{k:'tata altroz',p:1,v:'224K'}],
+   pg:[{u:'marutisuzuki.com/',t:'—',pct:0}]},
+  {id:'maruti',name:'Maruti Suzuki',url:'https://marutisuzuki.com/',c:'#e05a00',tr:2.3,trR:'2.3M',val:'$84.9K',valN:84.9,in:98,us:0,uae:0,uk:0,ca:0,rank:2,
+   kw:[{k:'maruti',p:1,v:'91K'},{k:'maruti victorious',p:3,v:'193K'},{k:'mssf',p:1,v:'22K'},{k:'swift dzire',p:2,v:'208K'},{k:'maruti suzuki victoris',p:1,v:'31K'}],
+   pg:[{u:'marutisuzuki.com/',t:'137.5K',pct:6},{u:'marutisuzuki.com/arena/victorios',t:'135.7K',pct:6},{u:'marutisuzuki.com/arena/wagon-r',t:'114.4K',pct:5},{u:'marutisuzuki.com/arena/ertiga/price',t:'102.2K',pct:4},{u:'marutisuzuki.com/arena/ertiga',t:'100K',pct:4}]},
+  {id:'toyota',name:'Toyota Bharat',url:'https://www.toyotabharat.com/',c:'#c0392b',tr:1.8,trR:'1.8M',val:'$71.2K',valN:71.2,in:93,us:2,uae:1,uk:0,ca:0,rank:3,
+   kw:[{k:'toyota',p:1,v:'344K'},{k:'toyota hyryder',p:1,v:'372K'},{k:'innova hycross',p:1,v:'228K'},{k:'hyryder',p:1,v:'89K'},{k:'toyota urban cruiser',p:1,v:'85K'}],
+   pg:[{u:'toyotabharat.com/showroom/urbancruiser-hyryder/',t:'361.9K',pct:22},{u:'toyotabharat.com/',t:'288.9K',pct:17},{u:'toyotabharat.com/showroom/innova/',t:'165.6K',pct:10},{u:'toyotabharat.com/showroom/fortuner/',t:'112.3K',pct:7},{u:'toyotabharat.com/showroom/urbancruiser-taisor/',t:'73.6K',pct:4}]},
+  {id:'honda',name:'Honda Cars India',url:'https://www.hondacarindia.com/',c:'#1565c0',tr:0.743,trR:'742.8K',val:'$25.8K',valN:25.8,in:96,us:1,uae:0,uk:0,ca:0,rank:4,
+   kw:[{k:'honda',p:1,v:'269K'},{k:'honda elevate',p:1,v:'223K'},{k:'honda amaze',p:1,v:'146K'},{k:'honda city',p:1,v:'154K'},{k:'honda cars',p:1,v:'37K'}],
+   pg:[{u:'hondacarindia.com/',t:'268.8K',pct:38},{u:'hondacarindia.com/honda-elevate',t:'119.7K',pct:17},{u:'hondacarindia.com/honda-city-5th-generation',t:'81.3K',pct:11},{u:'hondacarindia.com/honda-amaze',t:'77K',pct:11},{u:'hondacarindia.com/honda-city-ehev',t:'31.9K',pct:4}]},
+  {id:'hyundai',name:'Hyundai India',url:'https://www.hyundai.com/in/en',c:'#2e7d32',tr:0.221,trR:'220.7K',val:'$4.7K',valN:4.7,in:97,us:1,uae:0,uk:0,ca:1,rank:5,note:'Specific URL only',
+   kw:[{k:'hyundai',p:1,v:'223K'},{k:'hyundai india',p:1,v:'21K'},{k:'hyundai motor india',p:1,v:'13K'},{k:'hyundai cars',p:1,v:'35K'},{k:'hyundai car',p:1,v:'27K'}],
+   pg:[]}
+];
+
+const LOCAL=[
+  {id:'chandra',name:'Chandra Hyundai',url:'https://chandratn.hyundaimotor.in/',c:'#6d28d9',tr:184,trR:'184',val:'$21',valN:21,
+   kw:[{k:'hyundai roadside assistance number',p:6,v:'500'},{k:'hyundai car',p:16,v:'27K'},{k:'hyundai n line i20',p:9,v:'700'},{k:'near hyundai showroom',p:9,v:'450'},{k:'hyundai service center coimbatore',p:3,v:'150'}],
+   pg:[{u:'chandratn.hyundaimotor.in/with-in-warranty',t:'61',pct:30},{u:'chandratn.hyundaimotor.in/',t:'54',pct:26},{u:'chandratn.hyundaimotor.in/genuine-parts',t:'24',pct:12},{u:'chandratn.hyundaimotor.in/hatchback/i20-n-line',t:'22',pct:11},{u:'chandratn.hyundaimotor.in/connect-to-service/book-a-service',t:'21',pct:10}],
+   pros:['Ranks #3 for "hyundai service center coimbatore" (150 vol) — direct threat','Warranty & genuine parts pages target high-intent bottom-funnel users','Book-a-service page exists — captures service appointment leads'],
+   cons:['No standalone website — zero independent domain authority possible','Positions 6–16 for most KWs — very poor organic visibility','Traffic value only $21 — no monetisable SEO impact','No reviews, no blog, no model-specific landing pages'],
+   impact:'Chandra has the strongest local competitor SEO due to its #3 ranking for "service center coimbatore." However, their subdomain structure prevents long-term SEO growth. Their warranty traffic (30%) reveals strong user intent Lotus should also capture with dedicated pages.'},
+  {id:'kovai',name:'Kovai Hyundai',url:'https://kovai.hyundaimotor.in/',c:'#be185d',tr:31,trR:'31',val:'$6',valN:6,
+   kw:[{k:'hyundai showroom',p:10,v:'3.2K'},{k:'hyundai promise near me',p:9,v:'200'},{k:'hyundai showroom coimbatore',p:6,v:'150'},{k:'hyundai car service charges',p:4,v:'30'},{k:'hyundai showroom in coimbatore',p:5,v:'70'}],
+   pg:[{u:'kovai.hyundaimotor.in/',t:'23',pct:74},{u:'kovai.hyundaimotor.in/click-to-buy/h-promise',t:'9',pct:29},{u:'kovai.hyundaimotor.in/sedan/aura',t:'0',pct:0},{u:'kovai.hyundaimotor.in/genuine-parts',t:'0',pct:0},{u:'kovai.hyundaimotor.in/find-a-car/i20/highlights',t:'0',pct:0}],
+   pros:['Ranks #4 "hyundai car service charges" — bottom-funnel intent','Ranks #6 "hyundai showroom coimbatore" — key local keyword','H-Promise page targets certified pre-owned buyers'],
+   cons:['Only 31 organic visits — extremely low despite showroom keyword rankings','No standalone website — completely subdomain dependent','74% of all traffic on homepage only — no content depth','3 of 5 top pages have zero traffic'],
+   impact:'Kovai ranks for the most valuable local keywords but captures almost no traffic. Their keyword list is a direct blueprint for Lotus Hyundai — these are exactly the terms to target with dedicated landing pages and proper on-page SEO.'}
+];
+
+const HL=[
+  {id:'ch',name:'chandra-hyundai-coimbatore.com',sn:'Chandra Hyperlocal',c:'#6d28d9',tr:3,trR:'3',val:'$1',url:'https://chandra-hyundai-coimbatore.com/',status:'competitor',
+   kw:[{k:'hyundai showroom coimbatore',p:8,v:'150'}],
+   pg:[{u:'chandra-hyundai-coimbatore.com/',t:'3',pct:100}],
+   sigs:[{t:'red',tx:'Competitor hyperlocal for Chandra'},{t:'warn',tx:'Position 8 for showroom coimbatore'},{t:'green',tx:'Only 3 visits — very low authority'}]},
+  {id:'kh',name:'kovai-hyundai-coimbatore.com',sn:'Kovai Hyperlocal',c:'#be185d',tr:10,trR:'10',val:'$3.5',url:'https://kovai-hyundai-coimbatore.com/',status:'competitor',
+   kw:[{k:'hyundai service center coimbatore',p:7,v:'150'},{k:'kovai hyundai reviews',p:7,v:'40'},{k:'kovai cars coimbatore',p:7,v:'0'}],
+   pg:[{u:'kovai-hyundai-coimbatore.com/',t:'11',pct:100}],
+   sigs:[{t:'red',tx:'Competitor hyperlocal for Kovai'},{t:'warn',tx:'Position 7 for service center KW'},{t:'green',tx:'Only 10 visits — still very weak'}]},
+  {id:'lh',name:'lotus-hyundai-coimbatore.com',sn:'Lotus Hyperlocal (Ours)',c:'#0066cc',tr:1,trR:'1',val:'$0.59',url:'https://lotus-hyundai-coimbatore.com/',status:'own',
+   kw:[{k:'hyundai showroom in coimbatore',p:7,v:'70'}],
+   pg:[{u:'lotus-hyundai-coimbatore.com/',t:'2',pct:100}],
+   sigs:[{t:'red',tx:'CRITICAL: Only 1 visit/month'},{t:'red',tx:'Traffic value $0.59 — near zero'},{t:'green',tx:'Correct target keyword'},{t:'warn',tx:'Position 7 — needs content to hold'}]}
+];
+
+/* ═══════════════ OWN SOURCE — UPDATED DATA ═══════════════ */
+const OWN={
+  url:'https://www.lotushyundai.in/',
+  traffic:444,
+  value:'$17',
+  valueNum:17,
+  india:100,
+  nepal:0,
+  topKw: 'creta on road price coimbatore',
+  bestPos: 4,
+  kw:[
+    {k:'creta on road price coimbatore',p:4,v:'800'},
+    {k:'hyundai venue on road price in coimbatore',p:5,v:'600'},
+    {k:'venue brochure',p:9,v:'1.4K'},
+    {k:'venue on road price coimbatore',p:8,v:'800'},
+    {k:'hyundai creta on road price in coimbatore',p:4,v:'250'}
+  ],
+  pg:[
+    {u:'lotushyundai.in/new-creta/',t:'147',pct:39},
+    {u:'lotushyundai.in/venue/',t:'90',pct:24},
+    {u:'lotushyundai.in/wp-content/uploads/2025/12/Venue-Brochure-Lotus...',t:'53',pct:14},
+    {u:'lotushyundai.in/grand-i10-nios/',t:'52',pct:14},
+    {u:'lotushyundai.in/verna/',t:'14',pct:4}
+  ]
+};
+
+/* ═══════════════ HELPERS ═══════════════ */
+function posB(p){const c=p===1?'p1':p<=3?'p23':p<=5?'p45':'ph';return`<span class="pb2 ${c}">${p}</span>`;}
+function pBtn(url){return`<a href="${url}" target="_blank" class="pb"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M1 9L9 1M9 1H4M9 1V6" stroke="currentColor" stroke-width="1.5"/></svg>Proof</a>`;}
+function kwTbl(kws){return`<table class="kwt"><thead><tr><th>Keyword</th><th>Pos</th><th>Vol</th></tr></thead><tbody>${kws.map(k=>`<tr><td style="color:var(--text2);">${k.k}</td><td>${posB(k.p)}</td><td style="color:var(--gold);font-family:'DM SANS',sans-serif;font-size:.68rem;font-weight:700;">${k.v}</td></tr>`).join('')}</tbody></table>`;}
+function pgList(pgs,col){return pgs.map(p=>`<div class="pi"><a href="https://${p.u}" target="_blank" class="pu" title="${p.u}">/${p.u.split('/').slice(1).join('/')}</a><div class="pbw"><div class="pbf" style="width:${Math.min((p.pct||parseInt(p.t)||0)*3,100)}%;background:${col};"></div></div><span class="pp">${p.pct?p.pct+'%':p.t}</span></div>`).join('');}
+function ibRow(l,v,col,label){return`<div class="ib"><span class="ib-l">${l}</span><div class="ib-bw"><div class="ib-b" style="width:${v}%;background:${col};"></div></div><span class="ib-v" style="color:${col};">${label||v}</span></div>`;}
+function sigHtml(sigs){return sigs.map(s=>`<span class="sig ${s.t}" style="margin:2px;"><span class="sdot"></span>${s.tx}</span>`).join('');}
+
+/* ═══════════════ INIT ═══════════════ */
+function initAll(){
+  setTimeout(renderNat, 100);
+  setTimeout(renderLocal, 500);
+  setTimeout(renderHL, 800);
+  setTimeout(renderOwn, 1100);
+}
+
+/* ═══════════════ NATIONAL ═══════════════ */
+function renderNat(){
+  // Brand cards
+  document.getElementById('nCards').innerHTML=NAT.map(b=>`
+    <div class="card" style="border-left:4px solid ${b.c};">
+      <div style="font-family:'DM SANS',sans-serif;font-size:.55rem;letter-spacing:.2em;color:${b.c};text-transform:uppercase;margin-bottom:2px;">#${b.rank} National</div>
+      <div style="font-family:'DM SANS',sans-serif;font-size:.88rem;font-weight:700;margin-bottom:10px;color:var(--text);">${b.name}</div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;">
+        <div><div style="font-size:.6rem;color:var(--muted);">Organic Traffic</div><div style="font-family:'DM SANS',sans-serif;font-size:1.5rem;font-weight:800;color:var(--text);">${b.trR}</div></div>
+        ${pBtn(b.url)}
+      </div>
+      <div style="display:flex;gap:6px;align-items:baseline;margin-top:8px;"><span style="font-size:.6rem;color:var(--muted);">Value</span><span style="font-family:'DM SANS',sans-serif;font-size:.95rem;font-weight:700;color:var(--gold);">${b.val}</span></div>
+      <div style="height:5px;background:var(--surface3);border-radius:3px;margin-top:10px;"><div style="width:${(b.tr/3.3*100)}%;height:100%;background:${b.c};border-radius:3px;transition:width 1s ease;"></div></div>
+      <div style="font-size:.6rem;color:var(--muted2);margin-top:5px;">${b.url.replace('https://','').replace('http://','')}</div>
+      ${b.note?`<div style="font-size:.58rem;color:var(--warn);margin-top:3px;font-weight:600;">⚠ ${b.note}</div>`:''}
+    </div>`).join('');
+
+  // Bar
+  document.getElementById('nBar').innerHTML=`<div class="ct">Organic Traffic Volume</div><div class="cs">Monthly organic visits — all national brands</div><canvas id="nb" height="210"></canvas>`;
+  new Chart(document.getElementById('nb'),{type:'bar',data:{labels:NAT.map(b=>b.name.replace(' India','').replace(' Cars','').replace(' Bharat','')),datasets:[{data:NAT.map(b=>b.tr),backgroundColor:NAT.map(b=>b.c+'22'),borderColor:NAT.map(b=>b.c),borderWidth:2,borderRadius:7}]},options:{responsive:true,...CO,plugins:{...CO.plugins,legend:{display:false}},scales:{...CO.scales,y:{...CO.scales.y,ticks:{...CO.scales.y.ticks,callback:v=>v+'M'}}}}});
+
+  // Donut
+  document.getElementById('nDonut').innerHTML=`<div class="ct">Organic Market Share</div><div class="cs">By traffic volume</div><div style="max-width:230px;margin:0 auto;"><canvas id="nd"></canvas></div>`;
+  const tot=NAT.reduce((a,b)=>a+b.tr,0);
+  new Chart(document.getElementById('nd'),{type:'doughnut',data:{labels:NAT.map(b=>b.name),datasets:[{data:NAT.map(b=>((b.tr/tot)*100).toFixed(1)),backgroundColor:NAT.map(b=>b.c+'33'),borderColor:NAT.map(b=>b.c),borderWidth:2,hoverOffset:8}]},options:{responsive:true,cutout:'68%',plugins:{...CO.plugins,tooltip:{...CO.plugins.tooltip,callbacks:{label:ctx=>` ${ctx.raw}% share`}}}}});
+
+  // Value
+  document.getElementById('nVal').innerHTML=`<div class="ct">Traffic Value (USD/month)</div><div class="cs">Estimated keyword advertising value</div><canvas id="nv" height="160"></canvas>`;
+  new Chart(document.getElementById('nv'),{type:'bar',data:{labels:NAT.map(b=>b.name.replace(' India','').replace(' Cars','').replace(' Bharat','')),datasets:[{data:NAT.map(b=>b.valN),backgroundColor:NAT.map(b=>b.c+'22'),borderColor:NAT.map(b=>b.c),borderWidth:2,borderRadius:7}]},options:{indexAxis:'y',responsive:true,...CO,plugins:{...CO.plugins,legend:{display:false}},scales:{x:{grid:{color:'rgba(0,0,0,.04)'},ticks:{color:'#6b7f96',font:{family:'DM Sans',size:11},callback:v=>'$'+v+'K'}},y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{color:'#6b7f96',font:{family:'DM Sans',size:11}}}}}});
+
+  // Rank
+  document.getElementById('nRank').innerHTML=`<div class="ct">Competitive Ranking</div><div class="cs">By organic traffic volume</div><div style="display:flex;flex-direction:column;gap:10px;margin-top:14px;">
+    ${NAT.map((b,i)=>`<div style="display:flex;align-items:center;gap:10px;"><span style="font-family:'DM SANS',sans-serif;font-size:1rem;font-weight:800;color:${b.c};width:26px;text-align:center;">#${i+1}</span><div style="flex:1;"><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:.7rem;color:var(--text2);">${b.name}</span><span style="font-size:.68rem;color:var(--muted);">${b.trR}</span></div><div style="height:6px;background:var(--surface3);border-radius:4px;"><div style="width:${(b.tr/3.3*100)}%;height:100%;background:${b.c};border-radius:4px;"></div></div></div></div>`).join('')}
+  </div>`;
+
+  // KW
+  document.getElementById('nKw').innerHTML=NAT.slice(0,4).map(b=>`
+    <div class="card" style="border-left:3px solid ${b.c}33;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><div><div style="font-family:'DM SANS',sans-serif;font-size:.55rem;letter-spacing:.18em;color:${b.c};text-transform:uppercase;">${b.id.toUpperCase()}</div><div style="font-size:.83rem;font-weight:600;color:var(--text);">${b.name}</div></div>${pBtn(b.url)}</div>
+      ${kwTbl(b.kw)}
+    </div>`).join('');
+
+  // Pages
+  document.getElementById('nPages').innerHTML=NAT.filter(b=>b.pg.length>0&&b.pg[0].t!=='—').map(b=>`
+    <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><div><div style="font-family:'DM SANS',sans-serif;font-size:.55rem;letter-spacing:.18em;color:${b.c};text-transform:uppercase;">${b.name}</div><div style="font-size:.63rem;color:var(--muted);">Top Pages · India</div></div>${pBtn(b.url)}</div>${pgList(b.pg,b.c)}</div>`).join('');
+
+  // Impact
+  document.getElementById('nImpact').innerHTML=`
+    <div class="card" style="border-top:3px solid var(--red);">
+      <div style="font-family:'DM SANS',sans-serif;font-size:.78rem;font-weight:700;margin-bottom:12px;color:var(--text);">🔴 Red Signals — Competitive Threats</div>
+      ${ibRow('Tata: 15× more traffic than Hyundai.com/in',95,'var(--red)','CRITICAL')}
+      ${ibRow('Honda Elevate/City rank #1 — direct Hyundai rivals',80,'var(--red)','HIGH')}
+      ${ibRow('Maruti multi-keyword rankings exceed Hyundai',75,'var(--red)','HIGH')}
+      ${ibRow('Toyota Hyryder captures Creta-level search audiences',70,'var(--warn)','MEDIUM')}
+      ${ibRow('Hyundai national tracks only 1 URL — limited coverage',60,'var(--warn)','MEDIUM')}
+    </div>
+    <div class="card" style="border-top:3px solid var(--green);">
+      <div style="font-family:'DM SANS',sans-serif;font-size:.78rem;font-weight:700;margin-bottom:12px;color:var(--text);">🟢 Green Signals — Opportunities for Lotus</div>
+      ${ibRow('Model pages drive 10–38% of all national brand traffic',90,'var(--green)','ACTION')}
+      ${ibRow('Service & genuine parts pages = high-intent traffic',82,'var(--green)','ACTION')}
+      ${ibRow('Hyundai brand KW: 223K monthly searches available',88,'var(--green)','HIGH')}
+      ${ibRow('Price pages convert well — create local on-road price pages',78,'var(--green)','ACTION')}
+      ${ibRow('All brands rank #1 for brand KW — mirror for "Lotus Hyundai"',72,'var(--green)','DO IT')}
+    </div>`;
+
+  // Countries
+  const cm=[{f:'🇮🇳',n:'India',k:'in'},{f:'🇺🇸',n:'US',k:'us'},{f:'🇦🇪',n:'UAE',k:'uae'},{f:'🇬🇧',n:'UK',k:'uk'},{f:'🇨🇦',n:'Canada',k:'ca'}];
+  document.getElementById('nCtry').innerHTML=NAT.map(b=>`
+    <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><div style="font-family:'DM SANS',sans-serif;font-size:.72rem;font-weight:700;color:var(--text);">${b.name}</div>${pBtn(b.url)}</div>
+    ${cm.map(c=>{const v=b[c.k]||0;return`<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid var(--border);font-size:.7rem;"><span>${c.f}</span><span style="flex:1;color:var(--muted);">${c.n}</span><div style="width:62px;height:4px;background:var(--surface3);border-radius:2px;"><div style="width:${v}%;height:100%;background:${b.c};border-radius:2px;"></div></div><span style="font-family:'DM SANS',sans-serif;font-size:.64rem;color:var(--muted);min-width:28px;text-align:right;">${v}%</span></div>`;}).join('')}
+    </div>`).join('');
+}
+
+/* ═══════════════ LOCAL ═══════════════ */
+function renderLocal(){
+  document.getElementById('lCards').innerHTML=LOCAL.map(b=>`
+    <div class="card" style="border-left:4px solid ${b.c};">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+        <div>
+          <div style="font-family:'DM SANS',sans-serif;font-size:.55rem;letter-spacing:.18em;color:${b.c};text-transform:uppercase;">Local Competitor · Coimbatore</div>
+          <div style="font-family:'DM SANS',sans-serif;font-size:.95rem;font-weight:700;margin:3px 0 7px;color:var(--text);">${b.name}</div>
+          <span class="sig red"><span class="sdot"></span>No Standalone Website — Subdomain Only</span>
+        </div>
+        ${pBtn(b.url)}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:12px;">
+        <div style="background:var(--surface2);border-radius:8px;padding:.75rem;"><div style="font-size:.6rem;color:var(--muted);">Organic Traffic</div><div style="font-family:'DM SANS',sans-serif;font-size:1.5rem;font-weight:800;color:var(--text);">${b.trR}</div></div>
+        <div style="background:var(--surface2);border-radius:8px;padding:.75rem;"><div style="font-size:.6rem;color:var(--muted);">Traffic Value</div><div style="font-family:'DM SANS',sans-serif;font-size:1.5rem;font-weight:800;color:var(--gold);">${b.val}</div></div>
+      </div>
+      <div style="height:5px;background:var(--surface3);border-radius:3px;margin-top:12px;"><div style="width:${(b.tr/184*100)}%;height:100%;background:${b.c};border-radius:3px;"></div></div>
+      <div style="font-size:.64rem;color:var(--muted);margin-top:8px;line-height:1.6;">Operates via <span style="color:${b.c};font-weight:600;">hyundaimotor.in</span> subdomain — cannot build independent domain authority.</div>
+    </div>`).join('');
+
+  document.getElementById('lKw').innerHTML=LOCAL.map(b=>`
+    <div class="card" style="border-left:3px solid ${b.c}22;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><div><div style="font-family:'DM SANS',sans-serif;font-size:.55rem;letter-spacing:.18em;color:${b.c};text-transform:uppercase;">${b.name}</div></div>${pBtn(b.url)}</div>
+      ${kwTbl(b.kw)}
+    </div>`).join('');
+
+  document.getElementById('lPages').innerHTML=LOCAL.map(b=>`
+    <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><div style="font-family:'DM SANS',sans-serif;font-size:.72rem;font-weight:700;color:var(--text);">${b.name}</div>${pBtn(b.url)}</div>${pgList(b.pg,b.c)}</div>`).join('');
+
+  document.getElementById('lImpact').innerHTML=LOCAL.map(b=>`
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><div style="width:10px;height:10px;border-radius:50%;background:${b.c};flex-shrink:0;"></div><div style="font-family:'DM SANS',sans-serif;font-size:.78rem;font-weight:700;color:var(--text);">${b.name} — Analysis</div></div>
+      <div style="font-size:.7rem;color:var(--muted);line-height:1.75;margin-bottom:14px;padding:10px;background:var(--surface2);border-radius:8px;border-left:3px solid ${b.c};">${b.impact}</div>
+      <div style="font-size:.58rem;color:var(--green);font-family:'DM SANS',sans-serif;letter-spacing:.12em;margin-bottom:7px;">✅ PROS</div>
+      ${b.pros.map(p=>`<div style="display:flex;gap:7px;font-size:.68rem;color:var(--text2);line-height:1.55;margin-bottom:5px;"><span style="color:var(--green);flex-shrink:0;font-weight:700;">+</span>${p}</div>`).join('')}
+      <div style="font-size:.58rem;color:var(--red);font-family:'DM SANS',sans-serif;letter-spacing:.12em;margin:12px 0 7px;">❌ CONS</div>
+      ${b.cons.map(c=>`<div style="display:flex;gap:7px;font-size:.68rem;color:var(--text2);line-height:1.55;margin-bottom:5px;"><span style="color:var(--red);flex-shrink:0;font-weight:700;">−</span>${c}</div>`).join('')}
+    </div>`).join('');
+
+  document.getElementById('lCompare').innerHTML=`
+    <div class="ct" style="margin-bottom:14px;">Competitor Comparison Table</div>
+    <table style="width:100%;border-collapse:collapse;font-size:.74rem;">
+      <thead><tr style="background:var(--surface2);">
+        <th style="font-family:'DM SANS',sans-serif;font-size:.57rem;letter-spacing:.12em;color:var(--muted2);padding:10px 12px;text-align:left;border-bottom:2px solid var(--border);">Metric</th>
+        <th style="font-family:'DM SANS',sans-serif;font-size:.57rem;letter-spacing:.12em;color:#6d28d9;padding:10px 12px;text-align:left;border-bottom:2px solid var(--border);">Chandra Hyundai</th>
+        <th style="font-family:'DM SANS',sans-serif;font-size:.57rem;letter-spacing:.12em;color:#be185d;padding:10px 12px;text-align:left;border-bottom:2px solid var(--border);">Kovai Hyundai</th>
+        <th style="font-family:'DM SANS',sans-serif;font-size:.57rem;letter-spacing:.12em;color:var(--accent);padding:10px 12px;text-align:left;border-bottom:2px solid var(--border);">Lotus Opportunity</th>
+      </tr></thead>
+      <tbody>
+        ${[
+          ['Standalone Website','<span class="sig red"><span class="sdot"></span>No</span>','<span class="sig red"><span class="sdot"></span>No</span>','<span class="sig green"><span class="sdot"></span>✓ Already have one</span>'],
+          ['Monthly Organic Traffic','184','31','<span style="color:var(--green);font-weight:600;">444 (lotushyundai.in)</span>'],
+          ['Traffic Value','$21','$6','<span style="color:var(--green);font-weight:600;">$17 — already ahead</span>'],
+          ['Domain Authority','Shared hyundaimotor.in','Shared hyundaimotor.in','<span style="color:var(--green);font-weight:600;">Building own DR</span>'],
+          ['Best KW Position','#3 (service center)','#4 (service charges)','<span style="color:var(--green);font-weight:600;">#4 (creta on road price)</span>'],
+          ['"showroom coimbatore" Rank','Not ranking','#6 (150 vol)','<span style="color:var(--warn);font-weight:600;">Not ranking — target next</span>'],
+          ['Model Price Pages','None','None','<span style="color:var(--green);font-weight:600;">Creta, Venue, Grand i10 ✓</span>'],
+          ['Reviews / Testimonials','None','None','<span style="color:var(--warn);font-weight:600;">Add — quick SEO win</span>'],
+        ].map(r=>`<tr style="border-bottom:1px solid var(--border);transition:background .15s;" onmouseover="this.style.background='var(--accentl)'" onmouseout="this.style.background=''"><td style="padding:9px 12px;color:var(--muted);font-size:.72rem;">${r[0]}</td><td style="padding:9px 12px;font-size:.72rem;">${r[1]}</td><td style="padding:9px 12px;font-size:.72rem;">${r[2]}</td><td style="padding:9px 12px;font-size:.72rem;">${r[3]}</td></tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+/* ═══════════════ HYPERLOCAL ═══════════════ */
+function renderHL(){
+  document.getElementById('hlCards').innerHTML=HL.map(s=>`
+    <div class="card" style="border-left:4px solid ${s.c};${s.status==='own'?'background:linear-gradient(135deg,#f0f7ff,#e8f2fb);border:2px solid rgba(0,102,204,.2);border-left-width:4px;':''}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+        <div>
+          <div style="font-family:'DM SANS',sans-serif;font-size:.55rem;letter-spacing:.18em;color:${s.c};text-transform:uppercase;">${s.status==='own'?'🏠 OUR HYPERLOCAL SITE':'🔴 COMPETITOR SITE'}</div>
+          <div style="font-family:'DM SANS',sans-serif;font-size:.8rem;font-weight:700;margin:3px 0;color:var(--text);">${s.sn}</div>
+          <div style="font-size:.6rem;color:var(--muted2);word-break:break-all;">${s.name}</div>
+        </div>
+        ${pBtn(s.url)}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-top:10px;">
+        <div style="background:var(--surface2);border-radius:8px;padding:.7rem;"><div style="font-size:.58rem;color:var(--muted);">Traffic/mo</div><div style="font-family:'DM SANS',sans-serif;font-size:1.4rem;font-weight:800;color:${s.status==='own'&&s.tr<=2?'var(--red)':s.c};">${s.trR}</div></div>
+        <div style="background:var(--surface2);border-radius:8px;padding:.7rem;"><div style="font-size:.58rem;color:var(--muted);">Value</div><div style="font-family:'DM SANS',sans-serif;font-size:1.4rem;font-weight:800;color:var(--gold);">${s.val}</div></div>
+      </div>
+      <div style="height:5px;background:var(--surface3);border-radius:3px;margin:12px 0 10px;"><div style="width:${(s.tr/10*100)}%;height:100%;background:${s.c};border-radius:3px;"></div></div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;">${sigHtml(s.sigs)}</div>
+    </div>`).join('');
+
+  document.getElementById('hlKw').innerHTML=HL.map(s=>`
+    <div class="card" style="border-left:3px solid ${s.c}33;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><div style="font-family:'DM SANS',sans-serif;font-size:.72rem;font-weight:700;color:var(--text);">${s.sn}</div>${pBtn(s.url)}</div>
+      ${kwTbl(s.kw)}
+    </div>`).join('');
+
+  document.getElementById('hlPages').innerHTML=HL.map(s=>`
+    <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><div style="font-family:'DM SANS',sans-serif;font-size:.72rem;font-weight:700;color:var(--text);">${s.sn}</div>${pBtn(s.url)}</div>${pgList(s.pg,s.c)}</div>`).join('');
+
+  document.getElementById('hlImpact').innerHTML=`
+    <div class="card" style="border-top:3px solid var(--red);">
+      <div style="font-family:'DM SANS',sans-serif;font-size:.78rem;font-weight:700;margin-bottom:14px;color:var(--text);">🔴 Critical Findings</div>
+      ${[
+        {sig:'red',l:'CRITICAL',h:'Lotus hyperlocal has ONLY 1 VISIT/month',b:'lotus-hyundai-coimbatore.com is essentially invisible to Google. It needs immediate content, schema markup, and GMB link to hold its fragile position-7 ranking and grow.'},
+        {sig:'red',l:'CRITICAL',h:'Kovai hyperlocal outranks Lotus for service center KW',b:'"Hyundai service center coimbatore" (150 vol, high intent) — Kovai ranks #7, Lotus is not ranking at all. This is a direct bottom-funnel keyword loss.'},
+        {sig:'warn',l:'WARNING',h:'All sites are single-page — no content diversity',b:'The first site to publish 5+ pages wins this micro-market entirely. The competition is at the starting line — Lotus must sprint now.'},
+      ].map(i=>`<div style="display:flex;gap:10px;margin-bottom:14px;padding:12px;background:var(--surface2);border-radius:10px;border-left:3px solid ${i.sig==='red'?'var(--red)':'var(--warn)'};">
+        <div style="font-size:.7rem;"><span class="sig ${i.sig}"><span class="sdot"></span>${i.l}</span><strong style="color:var(--text);display:block;margin:6px 0 3px;">${i.h}</strong><span style="color:var(--muted);line-height:1.65;">${i.b}</span></div></div>`).join('')}
+    </div>
+    <div class="card" style="border-top:3px solid var(--green);">
+      <div style="font-family:'DM SANS',sans-serif;font-size:.78rem;font-weight:700;margin-bottom:14px;color:var(--text);">🟢 Strategic Actions</div>
+      ${[
+        {h:'Publish 5+ pages on lotus-hyundai-coimbatore.com immediately',b:'Models, service, location, testimonials, contact pages. Each page = a new keyword. Expected traffic increase: 10× in 60 days.'},
+        {h:'Target "hyundai showroom coimbatore" with dedicated landing page',b:'150 monthly searches. All competitors at positions 6–8. A properly optimised page reaches Top 3 in 30–45 days.'},
+        {h:'Add LocalBusiness + AutoDealer schema markup',b:'Triggers rich results for Coimbatore queries immediately. All competitor hyperlocal sites currently lack this.'},
+        {h:'Link Google My Business to lotus-hyundai-coimbatore.com',b:'GMB link signals local relevance to Google. Currently no hyperlocal site has verified GMB integration.'},
+      ].map(i=>`<div style="display:flex;gap:10px;margin-bottom:12px;padding:12px;background:var(--surface2);border-radius:10px;border-left:3px solid var(--green);">
+        <span style="color:var(--green);font-size:1rem;flex-shrink:0;font-weight:700;">✓</span>
+        <div style="font-size:.7rem;"><strong style="color:var(--text);display:block;margin-bottom:3px;">${i.h}</strong><span style="color:var(--muted);line-height:1.65;">${i.b}</span></div></div>`).join('')}
+    </div>`;
+
+  document.getElementById('hlChart').innerHTML=`<div class="ct">Hyperlocal Traffic Comparison</div><div class="cs">Monthly organic visits — all 3 hyperlocal domains</div><canvas id="hlc" height="140"></canvas>`;
+  new Chart(document.getElementById('hlc'),{type:'bar',data:{labels:HL.map(s=>s.sn),datasets:[{label:'Monthly Visits',data:HL.map(s=>s.tr),backgroundColor:HL.map(s=>s.c+'22'),borderColor:HL.map(s=>s.c),borderWidth:2,borderRadius:8}]},options:{responsive:true,...CO,plugins:{...CO.plugins,legend:{display:false}}}});
+}
+
+/* ═══════════════ OWN SOURCE (UPDATED) ═══════════════ */
+function renderOwn(){
+  // Stat Cards — updated data
+  document.getElementById('oStats').innerHTML=[
+    {l:'Organic Traffic',v:'444',sub:'/month',c:'var(--green)',bg:'var(--greenl)'},
+    {l:'Traffic Value',v:'$17',sub:'/month',c:'var(--gold)',bg:'var(--goldl)'},
+    {l:'Best Keyword Position',v:'#4',sub:'creta on road price cbr',c:'var(--accent)',bg:'var(--accentl)'},
+    {l:'Traffic Growth',v:'↑ Strong',sub:'Jan–Mar upward trend',c:'var(--green)',bg:'var(--greenl)'},
+  ].map(s=>`<div class="card" style="border-top:3px solid ${s.c};background:${s.bg};text-align:center;">
+    <div style="font-size:.6rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;">${s.l}</div>
+    <div style="font-family:'DM SANS',sans-serif;font-size:1.85rem;font-weight:800;color:${s.c};line-height:1;">${s.v}</div>
+    <div style="font-size:.62rem;color:var(--muted);margin-top:5px;">${s.sub}</div>
+  </div>`).join('');
+
+  // KW
+  document.getElementById('oKw').innerHTML=`
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div><div style="font-family:'DM SANS',sans-serif;font-size:.55rem;letter-spacing:.18em;color:var(--accent);text-transform:uppercase;">LOTUS HYUNDAI · lotushyundai.in</div><div style="font-size:.83rem;font-weight:600;color:var(--text);">Current Keyword Rankings</div></div>
+        ${pBtn(OWN.url)}
+      </div>
+      ${kwTbl(OWN.kw)}
+      <div style="margin-top:12px;padding:10px;background:var(--greenl);border-radius:8px;border-left:3px solid var(--green);">
+        <div style="font-size:.62rem;color:var(--green);font-weight:700;margin-bottom:4px;">✅ KEY INSIGHT</div>
+        <div style="font-size:.68rem;color:var(--text2);line-height:1.6;">All 5 keywords are local on-road price queries for Coimbatore — this is exactly the right intent to capture. Creta & Venue pages are already working at positions 4–5. Moving to Top 3 for these keywords alone would double traffic.</div>
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-family:'DM SANS',sans-serif;font-size:.78rem;font-weight:700;margin-bottom:12px;color:var(--text);">🎯 Keyword Gap — Should Be Targeting</div>
+      ${[
+        {k:'hyundai showroom coimbatore',v:'150',pri:'URGENT',c:'red'},
+        {k:'hyundai dealer coimbatore',v:'90',pri:'HIGH',c:'warn'},
+        {k:'buy hyundai creta coimbatore',v:'60',pri:'HIGH',c:'warn'},
+        {k:'hyundai service center coimbatore',v:'150',pri:'HIGH',c:'warn'},
+        {k:'hyundai test drive coimbatore',v:'40',pri:'MEDIUM',c:'green'},
+        {k:'hyundai emi calculator coimbatore',v:'2.4K',pri:'HIGH',c:'warn'},
+      ].map(k=>`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:.7rem;">
+        <span style="flex:1;color:var(--text2);">${k.k}</span>
+        <span style="color:var(--gold);font-family:'DM SANS',sans-serif;font-size:.67rem;font-weight:700;">${k.v}</span>
+        <span class="sig ${k.c}" style="font-size:.56rem;padding:2px 7px;"><span class="sdot"></span>${k.pri}</span>
+      </div>`).join('')}
+    </div>`;
+
+  // Pages
+  document.getElementById('oPages').innerHTML=`
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><div style="font-family:'DM SANS',sans-serif;font-size:.73rem;font-weight:700;color:var(--text);">Top Performing Pages</div>${pBtn(OWN.url)}</div>
+      ${pgList(OWN.pg,'var(--accent)')}
+      <div style="margin-top:12px;padding:10px;background:var(--greenl);border-radius:8px;border-left:3px solid var(--green);">
+        <div style="font-size:.62rem;color:var(--green);font-weight:700;margin-bottom:4px;">✅ WHAT'S WORKING</div>
+        <div style="font-size:.68rem;color:var(--text2);line-height:1.6;">New Creta page (39%) + Venue page (24%) = <strong>63% of all traffic</strong>. Model-level pages with Coimbatore on-road pricing are clearly the winning content strategy. Grand i10 Nios (14%) confirms the pattern. Continue this for every Hyundai model.</div>
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-family:'DM SANS',sans-serif;font-size:.78rem;font-weight:700;margin-bottom:12px;color:var(--text);">❌ Missing High-Impact Pages</div>
+      ${[
+        {p:'Hyundai Alcazar on-road price Coimbatore',imp:'HIGH — popular 7-seater search',pri:'HIGH'},
+        {p:'Hyundai Exter on-road price Coimbatore',imp:'HIGH — newer model, growing searches',pri:'URGENT'},
+        {p:'Hyundai Tucson / Ioniq 5 Coimbatore page',imp:'MEDIUM — premium segment',pri:'MEDIUM'},
+        {p:'Showroom Location / Contact Page with Map',imp:'HIGH — drives footfall',pri:'URGENT'},
+        {p:'Hyundai Service Centre Coimbatore page',imp:'HIGH — 150 monthly searches',pri:'HIGH'},
+        {p:'Customer Reviews & Testimonials',imp:'MEDIUM — trust + CTR boost',pri:'MEDIUM'},
+        {p:'EMI Calculator Tool',imp:'HIGH — 2.4K monthly search intent',pri:'HIGH'},
+        {p:'Blog: Hyundai vs Maruti comparison Coimbatore',imp:'MEDIUM — comparison traffic',pri:'MEDIUM'},
+      ].map(p=>`<div style="display:flex;gap:8px;font-size:.7rem;padding:7px 0;border-bottom:1px solid var(--border);line-height:1.55;">
+        <span style="color:var(--red);flex-shrink:0;font-weight:700;">✕</span>
+        <div><div style="color:var(--text2);">${p.p}</div>
+        <div style="display:flex;gap:6px;margin-top:3px;"><span style="color:var(--muted);font-size:.62rem;">${p.imp}</span>
+        <span class="sig ${p.pri==='URGENT'?'red':p.pri==='HIGH'?'warn':'green'}" style="font-size:.54px;padding:1px 6px;"><span class="sdot"></span>${p.pri}</span></div></div>
+      </div>`).join('')}
+    </div>`;
+
+  // Scorecard + Pros/Cons
+  document.getElementById('oScore').innerHTML=`
+    <div class="card">
+      <div style="font-family:'DM SANS',sans-serif;font-size:.78rem;font-weight:700;margin-bottom:14px;color:var(--text);">📊 SEO Health Scorecard</div>
+      ${[
+        {l:'Keyword Coverage (Local)',v:45,c:'var(--warn)'},
+        {l:'Content Depth & Volume',v:35,c:'var(--warn)'},
+        {l:'Local SEO Signals',v:40,c:'var(--warn)'},
+        {l:'Technical SEO',v:55,c:'var(--warn)'},
+        {l:'Backlink Profile',v:30,c:'var(--red)'},
+        {l:'Schema Markup',v:20,c:'var(--red)'},
+        {l:'Mobile Optimisation',v:65,c:'var(--green)'},
+        {l:'Traffic Growth Trend',v:80,c:'var(--green)'},
+      ].map(s=>ibRow(s.l,s.v,s.c)).join('')}
+      <div style="margin-top:14px;padding:10px 14px;background:linear-gradient(135deg,var(--greenl),transparent);border-radius:8px;border-left:3px solid var(--green);">
+        <div style="font-size:.68rem;color:var(--green);font-weight:700;margin-bottom:3px;">📈 POSITIVE: Strong Growth Trend</div>
+        <div style="font-size:.67rem;color:var(--text2);line-height:1.6;">The Ahrefs chart shows traffic nearly doubling from Jan to March — from ~150 to 800 peak visits. Model price pages are the key driver. This momentum must be sustained with new model pages added monthly.</div>
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-family:'DM SANS',sans-serif;font-size:.78rem;font-weight:700;margin-bottom:14px;color:var(--text);">⚖️ Own Website vs Subdomain (HMI)</div>
+      <div style="font-size:.6rem;color:var(--green);font-family:'DM SANS',sans-serif;letter-spacing:.1em;margin-bottom:9px;padding:5px 10px;background:var(--greenl);border-radius:5px;display:inline-block;">✓ CURRENT — lotushyundai.in (OWN SITE)</div>
+      ${[
+        {t:'green',tx:'Full content control — publish any page, any model, any keyword'},
+        {t:'green',tx:'Building independent Domain Rating — long-term SEO asset'},
+        {t:'green',tx:'Google treats as Coimbatore business — strong local signals'},
+        {t:'green',tx:'Can integrate EMI calc, booking, WhatsApp, reviews'},
+        {t:'green',tx:'Traffic growing sharply — model price pages working well'},
+        {t:'warn',tx:'Backlink profile still weak — needs citation building'},
+        {t:'warn',tx:'Positions 4–9 for current KWs — Top 3 is the goal'},
+      ].map(p=>`<div style="display:flex;gap:7px;font-size:.68rem;line-height:1.55;margin-bottom:5px;"><span style="color:${p.t==='green'?'var(--green)':'var(--warn)'};flex-shrink:0;font-weight:700;">${p.t==='green'?'✓':'△'}</span><span style="color:var(--text2);">${p.tx}</span></div>`).join('')}
+      <div style="height:1px;background:var(--border);margin:14px 0;"></div>
+      <div style="font-size:.6rem;color:var(--muted);font-family:'DM SANS',sans-serif;letter-spacing:.1em;margin-bottom:9px;padding:5px 10px;background:var(--surface2);border-radius:5px;display:inline-block;">SECONDARY — lotus.hyundaimotor.in (HMI SUBDOMAIN)</div>
+      ${[
+        {t:'warn',tx:'Only 23 visits/month — very low compared to own site'},
+        {t:'warn',tx:'Cannot build independent domain authority on HMI subdomain'},
+        {t:'warn',tx:'Limited content control — Hyundai template restrictions apply'},
+        {t:'green',tx:'Inherits some Hyundai brand trust — useful for brand searches'},
+      ].map(p=>`<div style="display:flex;gap:7px;font-size:.68rem;line-height:1.55;margin-bottom:5px;"><span style="color:${p.t==='green'?'var(--green)':'var(--warn)'};flex-shrink:0;font-weight:700;">${p.t==='green'?'✓':'△'}</span><span style="color:var(--text2);">${p.tx}</span></div>`).join('')}
+    </div>`;
+
+  // Action Plan
+  document.getElementById('oAction').innerHTML=`
+    <div style="font-family:'DM SANS',sans-serif;font-size:.8rem;font-weight:700;margin-bottom:18px;color:var(--text);">📋 Recommended 90-Day SEO Action Plan — lotushyundai.in</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;">
+      ${[
+        {ph:'Phase 1',days:'Days 1–30',c:'var(--red)',bg:'var(--redl)',title:'Quick Wins',items:['Create Exter on-road price page (fastest-growing model)','Create Alcazar on-road price page','Add contact/showroom location page with map embed','Set up Google Search Console — monitor all ranking keywords','Add FAQ schema to Creta & Venue pages for rich results']},
+        {ph:'Phase 2',days:'Days 31–60',c:'var(--warn)',bg:'var(--warnl)',title:'Content Expansion',items:['Create Tucson, i20 N-Line, Verna on-road price pages','Add service centre page — target "hyundai service center coimbatore"','Build directory citations: JustDial, Sulekha, CarDekho','Write 4 blog posts: Creta vs Seltos, Venue vs Nexon, etc.','Add customer reviews section to all model pages']},
+        {ph:'Phase 3',days:'Days 61–90',c:'var(--green)',bg:'var(--greenl)',title:'Authority & Growth',items:['Launch EMI calculator tool — target 2.4K intent keyword','Acquire 10 quality local backlinks (news, forums, directories)','Push Creta & Venue pages to Top 3 — current positions #4 & #5','Target "hyundai showroom coimbatore" with dedicated page','Measure — aim for 1000+ organic visits/month by day 90']},
+      ].map(p=>`
+        <div style="background:${p.bg};border-radius:12px;padding:1.1rem;border:1px solid var(--border);border-top:3px solid ${p.c};">
+          <div style="font-family:'DM SANS',sans-serif;font-size:.56rem;letter-spacing:.2em;color:${p.c};text-transform:uppercase;">${p.ph}</div>
+          <div style="font-family:'DM SANS',sans-serif;font-size:.8rem;font-weight:700;margin:4px 0 2px;color:var(--text);">${p.title}</div>
+          <div style="font-size:.6rem;color:var(--muted);margin-bottom:12px;">${p.days}</div>
+          ${p.items.map(i=>`<div style="display:flex;gap:7px;font-size:.68rem;color:var(--text2);line-height:1.55;margin-bottom:6px;"><span style="color:${p.c};flex-shrink:0;font-weight:700;">→</span>${i}</div>`).join('')}
+        </div>`).join('')}
+    </div>`;
+
+  // Animate score arc
+  anime({targets:'#scoreArc',strokeDashoffset:[263.9,131],duration:1500,delay:600,easing:'easeOutCubic'});
+}
+</script>
+</body>
+</html>
