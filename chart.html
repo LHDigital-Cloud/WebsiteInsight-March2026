@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lotus Hyundai — Traffic Trend Analysis</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════
+   BASE
+══════════════════════════════════════════ */
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+:root{
+  --bg:#f0f4f8;
+  --surface:#ffffff;
+  --surface2:#f5f7fa;
+  --surface3:#eaeff5;
+  --border:#d8e1eb;
+  --text:#0d1b2a;
+  --text2:#2d3f55;
+  --muted:#6b7f96;
+  --muted2:#9aafc5;
+  --accent:#0055cc;
+  --accentl:rgba(0,85,204,.09);
+  --green:#006b45;
+  --greenl:rgba(0,107,69,.09);
+  --red:#b91c2c;
+  --redl:rgba(185,28,44,.09);
+  --warn:#9a5200;
+  --warnl:rgba(154,82,0,.09);
+  --gold:#c87000;
+  --shadow:0 2px 8px rgba(0,0,0,.06),0 6px 24px rgba(0,0,0,.05);
+  --shadow-lg:0 8px 32px rgba(0,0,0,.12),0 2px 8px rgba(0,0,0,.06);
+
+  /* brand colors */
+  --c-tata:#0077aa;
+  --c-maruti:#c54200;
+  --c-toyota:#b71c1c;
+  --c-honda:#1251a0;
+  --c-hyundai:#1b7f3a;
+  --c-lotus:#d97b00;
+  --c-chandra:#6b21a8;
+  --c-kovai:#9d174d;
+  --c-lhl:#0055cc;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* ══ HEADER ══ */
+.site-header{background:#fff;border-bottom:1px solid var(--border);padding:0 2rem;height:62px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 0 var(--border),0 2px 12px rgba(0,0,0,.04);}
+.header-left{display:flex;align-items:center;gap:12px;}
+.header-logo{display:flex;align-items:center;gap:8px;text-decoration:none;}
+.logo-icon{width:28px;height:28px;}
+.logo-text{font-size:1.05rem;font-weight:800;color:var(--accent);letter-spacing:-.01em;}
+.logo-sep{color:var(--muted2);font-weight:300;font-size:1.1rem;margin:0 4px;}
+.header-title{font-size:1rem;font-weight:600;color:var(--text2);}
+.back-btn{display:inline-flex;align-items:center;gap:7px;padding:7px 16px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-size:.85rem;font-weight:600;cursor:pointer;text-decoration:none;transition:all .2s;}
+.back-btn:hover{background:var(--accentl);border-color:rgba(0,85,204,.25);color:var(--accent);}
+.header-date{font-size:.8rem;color:var(--muted);background:var(--surface2);border:1px solid var(--border);padding:4px 12px;border-radius:20px;}
+
+/* ══ HERO ══ */
+.page-hero{background:linear-gradient(135deg,#fff 55%,#eef4ff);border-bottom:1px solid var(--border);padding:2.5rem 2rem 2rem;}
+.hero-inner{max-width:1300px;margin:0 auto;}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:var(--accentl);color:var(--accent);border:1px solid rgba(0,85,204,.2);border-radius:20px;padding:4px 14px;font-size:.8rem;font-weight:600;margin-bottom:14px;}
+.hero-h1{font-size:2rem;font-weight:800;color:var(--text);line-height:1.2;margin-bottom:.6rem;}
+.hero-sub{font-size:1rem;color:var(--muted);line-height:1.7;max-width:680px;margin-bottom:1.5rem;}
+.hero-tags{display:flex;gap:8px;flex-wrap:wrap;}
+.tag{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;font-size:.82rem;font-weight:600;border:1px solid;}
+.tag.red{background:var(--redl);color:var(--red);border-color:rgba(185,28,44,.2);}
+.tag.green{background:var(--greenl);color:var(--green);border-color:rgba(0,107,69,.2);}
+.tag.warn{background:var(--warnl);color:var(--warn);border-color:rgba(154,82,0,.2);}
+.tag.blue{background:var(--accentl);color:var(--accent);border-color:rgba(0,85,204,.2);}
+.tdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+
+/* ══ LAYOUT ══ */
+.page-body{max-width:1300px;margin:0 auto;padding:2.5rem 2rem;}
+
+/* ══ SECTION HEADER ══ */
+.sec-hdr{margin-bottom:1.5rem;}
+.sec-cat{font-size:.72rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.sec-title{font-size:1.35rem;font-weight:800;color:var(--text);margin-bottom:.4rem;}
+.sec-desc{font-size:.92rem;color:var(--muted);line-height:1.7;max-width:700px;}
+
+/* ══ CHART WRAPPER ══ */
+.chart-section{margin-bottom:3.5rem;}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);}
+.chart-header{padding:1.5rem 1.75rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;}
+.chart-meta{flex:1;}
+.chart-title{font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:.3rem;}
+.chart-desc{font-size:.85rem;color:var(--muted);line-height:1.6;}
+.chart-badges{display:flex;gap:6px;flex-wrap:wrap;}
+.cbadge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;font-size:.78rem;font-weight:600;border:1px solid;}
+.cbadge.red{background:var(--redl);color:var(--red);border-color:rgba(185,28,44,.2);}
+.cbadge.green{background:var(--greenl);color:var(--green);border-color:rgba(0,107,69,.2);}
+.cbadge.warn{background:var(--warnl);color:var(--warn);border-color:rgba(154,82,0,.2);}
+.cdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.chart-body{padding:1.5rem 1.75rem 1.25rem;position:relative;}
+.chart-canvas-wrap{position:relative;height:300px;}
+
+/* ══ LEGEND ══ */
+.chart-legend{display:flex;gap:1rem;flex-wrap:wrap;padding:1rem 1.75rem 1.25rem;border-top:1px solid var(--border);background:var(--surface2);}
+.legend-item{display:flex;align-items:center;gap:7px;font-size:.83rem;font-weight:500;color:var(--text2);cursor:pointer;padding:3px 8px;border-radius:6px;transition:background .15s;}
+.legend-item:hover{background:var(--surface3);}
+.legend-line{width:20px;height:3px;border-radius:2px;flex-shrink:0;}
+.legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+
+/* ══ POPUP TOOLTIP ══ */
+#popup{
+  position:fixed;
+  pointer-events:none;
+  z-index:9999;
+  opacity:0;
+  transform:translateY(6px) scale(.97);
+  transition:opacity .18s ease, transform .18s ease;
+  min-width:220px;
+  max-width:280px;
+}
+#popup.visible{
+  opacity:1;
+  transform:translateY(0) scale(1);
+}
+.popup-inner{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:14px;
+  box-shadow:var(--shadow-lg);
+  overflow:hidden;
+}
+.popup-header{
+  padding:10px 14px 8px;
+  border-bottom:1px solid var(--border);
+  background:var(--surface2);
+}
+.popup-month{font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:2px;}
+.popup-title{font-size:.95rem;font-weight:700;color:var(--text);}
+.popup-rows{padding:8px 0 4px;}
+.popup-row{display:flex;align-items:center;gap:10px;padding:6px 14px;transition:background .1s;}
+.popup-row:hover{background:var(--surface2);}
+.pr-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.pr-name{font-size:.83rem;font-weight:500;color:var(--text2);flex:1;}
+.pr-val{font-size:.87rem;font-weight:700;color:var(--text);}
+.popup-footer{padding:8px 14px 10px;border-top:1px solid var(--border);}
+.popup-insight{font-size:.76rem;color:var(--muted);line-height:1.55;}
+
+/* ══ LAG SECTION ══ */
+.lag-section{margin-bottom:3.5rem;}
+.lag-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;}
+@media(max-width:860px){.lag-grid{grid-template-columns:1fr;}}
+.lag-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.5rem;box-shadow:var(--shadow);}
+.lag-card.national{border-top:4px solid var(--green);}
+.lag-card.dealer{border-top:4px solid var(--accent);}
+.lag-icon{font-size:1.5rem;margin-bottom:.75rem;}
+.lag-who{font-size:.72rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+.lag-title{font-size:1.15rem;font-weight:800;color:var(--text);margin-bottom:.5rem;}
+.lag-desc{font-size:.88rem;color:var(--muted);line-height:1.7;margin-bottom:1.1rem;}
+.lag-items{display:flex;flex-direction:column;gap:.6rem;}
+.lag-item{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-radius:10px;border:1px solid;}
+.lag-item.red{background:var(--redl);border-color:rgba(185,28,44,.15);}
+.lag-item.warn{background:var(--warnl);border-color:rgba(154,82,0,.15);}
+.lag-item.green{background:var(--greenl);border-color:rgba(0,107,69,.15);}
+.lag-bullet{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+.lag-bullet.red{background:var(--red);}
+.lag-bullet.warn{background:var(--warn);}
+.lag-bullet.green{background:var(--green);}
+.lag-text{font-size:.85rem;line-height:1.6;color:var(--text2);}
+.lag-text strong{color:var(--text);font-weight:700;}
+
+/* ══ COMPARISON TABLE ══ */
+.comp-table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:auto;box-shadow:var(--shadow);margin-bottom:3.5rem;}
+.comp-table{width:100%;border-collapse:collapse;font-size:.88rem;}
+.comp-table th{background:var(--surface2);font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:12px 16px;text-align:left;border-bottom:2px solid var(--border);white-space:nowrap;}
+.comp-table td{padding:12px 16px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:middle;}
+.comp-table tr:last-child td{border:none;}
+.comp-table tr:hover td{background:var(--surface2);}
+.comp-table .brand-cell{display:flex;align-items:center;gap:10px;font-weight:600;color:var(--text);}
+.brand-swatch{width:12px;height:12px;border-radius:3px;flex-shrink:0;}
+.trend-up{color:var(--green);font-weight:700;}
+.trend-down{color:var(--red);font-weight:700;}
+.trend-flat{color:var(--warn);font-weight:700;}
+.status-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:.75rem;font-weight:600;}
+.sp-green{background:var(--greenl);color:var(--green);border:1px solid rgba(0,107,69,.2);}
+.sp-red{background:var(--redl);color:var(--red);border:1px solid rgba(185,28,44,.2);}
+.sp-warn{background:var(--warnl);color:var(--warn);border:1px solid rgba(154,82,0,.2);}
+
+/* ══ FOOTER ══ */
+.page-footer{background:var(--surface);border-top:1px solid var(--border);padding:1.5rem 2rem;text-align:center;}
+.pf-inner{max-width:1300px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;}
+.pf-note{font-size:.8rem;color:var(--muted);}
+.pf-links{display:flex;gap:1rem;}
+.pf-link{font-size:.78rem;color:var(--muted);text-decoration:none;transition:color .2s;}
+.pf-link:hover{color:var(--accent);}
+
+/* ══ SCROLLBAR ══ */
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--muted2);border-radius:4px;}
+
+/* ══ RESPONSIVE ══ */
+@media(max-width:700px){
+  .hero-h1{font-size:1.5rem;}
+  .page-body{padding:1.5rem 1rem;}
+  .chart-header{flex-direction:column;}
+  .chart-canvas-wrap{height:220px;}
+  .pf-inner{flex-direction:column;text-align:center;}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="header-left">
+    <div class="header-logo">
+      <svg class="logo-icon" viewBox="0 0 28 28" fill="none">
+        <ellipse cx="14" cy="14" rx="4.5" ry="11" fill="rgba(0,85,204,.55)" transform="rotate(-30 14 14)"/>
+        <ellipse cx="14" cy="14" rx="4.5" ry="11" fill="rgba(0,85,204,.55)"/>
+        <ellipse cx="14" cy="14" rx="4.5" ry="11" fill="rgba(0,85,204,.55)" transform="rotate(30 14 14)"/>
+        <circle cx="14" cy="14" r="3.5" fill="#0055cc"/>
+      </svg>
+      <span class="logo-text">LOTUS HYUNDAI</span>
+    </div>
+    <span class="logo-sep">/</span>
+    <span class="header-title">Traffic Trend Analysis</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <span class="header-date" id="hDate"></span>
+    <a href="index.html" class="back-btn">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7L9 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Back to Dashboard
+    </a>
+  </div>
+</header>
+
+<!-- PAGE HERO -->
+<div class="page-hero">
+  <div class="hero-inner">
+    <div class="hero-badge">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 10L5 6L8 9L13 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Traffic Trend Lines · Nov 2025 – Mar 2026
+    </div>
+    <h1 class="hero-h1">SEO Traffic Trends &amp; Performance Gaps</h1>
+    <div class="hero-tags">
+      <span class="tag red"><span class="tdot" style="background:var(--red);"></span>Hyundai National — Underperforming</span>
+      <span class="tag red"><span class="tdot" style="background:var(--red);"></span>Lotus Hyperlocal — Near Zero</span>
+      <span class="tag green"><span class="tdot" style="background:var(--green);"></span>Lotus Own Site — Growing</span>
+      <span class="tag warn"><span class="tdot" style="background:var(--warn);"></span>Local Competitors — Low &amp; Flat</span>
+    </div>
+  </div>
+</div>
+
+<!-- POPUP CARD -->
+<div id="popup">
+  <div class="popup-inner">
+    <div class="popup-header">
+      <div class="popup-month" id="popMonth"></div>
+      <div class="popup-title" id="popTitle"></div>
+    </div>
+    <div class="popup-rows" id="popRows"></div>
+    <div class="popup-footer">
+      <div class="popup-insight" id="popInsight"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE BODY -->
+<div class="page-body">
+
+  <!-- ══ CHART 1: NATIONAL COMPETITORS ══ -->
+  <div class="chart-section">
+    <div class="sec-hdr">
+      <div class="sec-cat">Chart 1 · National Level</div>
+      <div class="sec-title">National Brand Organic Traffic Trends</div>
+      <div class="sec-desc">Monthly organic traffic comparison across India's top 5 automotive brands. Tata consistently leads — notice how all competitors grow steadily while Hyundai.com/in stays nearly flat.</div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="chart-meta">
+          <div class="chart-title">National Competitors — Organic Traffic (Nov 2025 – Mar 2026)</div>
+          <div class="chart-desc">Hover any data point for a detailed breakdown popup card.</div>
+        </div>
+        <div class="chart-badges">
+          <span class="cbadge red"><span class="cdot" style="background:var(--c-hyundai);"></span>Hyundai flatlines at 220K</span>
+          <span class="cbadge green"><span class="cdot" style="background:var(--c-tata);"></span>Tata leads at 3.3M+</span>
+        </div>
+      </div>
+      <div class="chart-body">
+        <div class="chart-canvas-wrap"><canvas id="c1"></canvas></div>
+      </div>
+      <div class="chart-legend" id="leg1"></div>
+    </div>
+  </div>
+
+  <!-- ══ CHART 2: LOCAL COMPETITORS ══ -->
+  <div class="chart-section">
+    <div class="sec-hdr">
+      <div class="sec-cat">Chart 2 · Local Level — Coimbatore</div>
+      <div class="sec-title">Local Competitor Traffic Trends</div>
+      <div class="sec-desc">Chandra Hyundai vs Kovai Hyundai — both operating on subdomains with no standalone site. Chandra shows a mid-period spike but drops sharply. Kovai stays flat.</div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="chart-meta">
+          <div class="chart-title">Chandra & Kovai Hyundai — Subdomain Traffic (Nov 2025 – Mar 2026)</div>
+          <div class="chart-desc">Neither competitor has a standalone website. All traffic flows through hyundaimotor.in subdomain.</div>
+        </div>
+        <div class="chart-badges">
+          <span class="cbadge warn"><span class="cdot" style="background:var(--c-chandra);"></span>Chandra peaks then drops</span>
+          <span class="cbadge warn"><span class="cdot" style="background:var(--c-kovai);"></span>Kovai nearly flat</span>
+        </div>
+      </div>
+      <div class="chart-body">
+        <div class="chart-canvas-wrap"><canvas id="c2"></canvas></div>
+      </div>
+      <div class="chart-legend" id="leg2"></div>
+    </div>
+  </div>
+
+  <!-- ══ CHART 3: HYPERLOCAL ══ -->
+  <div class="chart-section">
+    <div class="sec-hdr">
+      <div class="sec-cat">Chart 3 · Hyperlocal — Coimbatore Domains</div>
+      <div class="sec-title">Hyperlocal Site Traffic Trends</div>
+      <div class="sec-desc">Three standalone hyperlocal domains targeting Coimbatore Hyundai keywords. Kovai's hyperlocal peaks in Feb before falling. Lotus's own hyperlocal is near zero throughout — a critical gap.</div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="chart-meta">
+          <div class="chart-title">Hyperlocal Domains — *-hyundai-coimbatore.com (Nov 2025 – Mar 2026)</div>
+          <div class="chart-desc">Traffic is minimal for all — but whoever builds content first wins this micro-market.</div>
+        </div>
+        <div class="chart-badges">
+          <span class="cbadge red"><span class="cdot" style="background:var(--c-lhl);"></span>Lotus hyperlocal = 0–1 visits</span>
+          <span class="cbadge warn"><span class="cdot" style="background:var(--c-kovai);"></span>Kovai peaks at ~20</span>
+        </div>
+      </div>
+      <div class="chart-body">
+        <div class="chart-canvas-wrap"><canvas id="c3"></canvas></div>
+      </div>
+      <div class="chart-legend" id="leg3"></div>
+    </div>
+  </div>
+
+  <!-- ══ CHART 4: OWN SOURCE ══ -->
+  <div class="chart-section">
+    <div class="sec-hdr">
+      <div class="sec-cat">Chart 4 · Lotus Hyundai Own Source & HMIL Source</div>
+      <div class="sec-title">Lotus Hyundai — Own Website & HMIL Website Growth</div>
+      <div class="sec-desc">lotushyundai.in shows a strong upward trend from January onwards, driven by Creta and Venue on-road price pages. Traffic nearly triples from Nov to March peak.</div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="chart-meta">
+          <div class="chart-title">lotushyundai.in — Organic Traffic Growth (Nov 2025 – Mar 2026)</div>
+          <div class="chart-desc">Model-level on-road price pages are the primary growth driver. Momentum is building.</div>
+        </div>
+        <div class="chart-badges">
+          <span class="cbadge green"><span class="cdot" style="background:var(--c-lotus);"></span>Strong upward trend</span>
+          <span class="cbadge warn"><span class="cdot" style="background:var(--c-lhl);"></span>HMI subdomain flat at 23</span>
+        </div>
+      </div>
+      <div class="chart-body">
+        <div class="chart-canvas-wrap"><canvas id="c4"></canvas></div>
+      </div>
+      <div class="chart-legend" id="leg4"></div>
+    </div>
+  </div>
+
+  <!-- ══ CHART 5: ALL BRANDS COMBINED ══ -->
+  <div class="chart-section">
+    <div class="sec-hdr">
+      <div class="sec-cat">Chart 5 · Combined View</div>
+      <div class="sec-title">All Brands — Full Market View (Scaled)</div>
+      <div class="sec-desc">All brands on one chart using a logarithmic scale so smaller players are visible alongside national giants. This shows the massive traffic gap between national brands and local/hyperlocal players.</div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="chart-meta">
+          <div class="chart-title">All Brands Combined — Log Scale (Nov 2025 – Mar 2026)</div>
+          <div class="chart-desc">Logarithmic scale used — each grid line = 10× the previous. This makes small brands visible.</div>
+        </div>
+        <div class="chart-badges">
+          <span class="cbadge red"><span class="cdot" style="background:var(--red);"></span>Gap: 15,000× between Tata &amp; Lotus HL</span>
+          <span class="cbadge green"><span class="cdot" style="background:var(--c-lotus);"></span>Lotus own site growing</span>
+        </div>
+      </div>
+      <div class="chart-body">
+        <div class="chart-canvas-wrap" style="height:340px;"><canvas id="c5"></canvas></div>
+      </div>
+      <div class="chart-legend" id="leg5"></div>
+    </div>
+  </div>
+
+  <!-- ══ WHERE THEY LAG ══ -->
+  <div class="lag-section">
+    <div class="sec-hdr">
+      <div class="sec-cat">Gap Analysis</div>
+      <div class="sec-title">Where Are They Lagging? — Detailed Breakdown</div>
+      <div class="sec-desc">A clear analysis of where Hyundai at the national level and Lotus Hyundai at the dealer level are falling behind, and what actions can close each gap.</div>
+    </div>
+    <div class="lag-grid">
+
+      <!-- NATIONAL LAG -->
+      <div class="lag-card national">
+        <div class="lag-icon">🏢</div>
+        <div class="lag-who">National Level</div>
+        <div class="lag-title">Hyundai India — Where It Lags</div>
+        <div class="lag-desc">Hyundai.com/in tracks only a single URL and records just 220K monthly visits — while Tata Motors reaches 3.3M with a full multi-page strategy. Here is every gap, clearly explained.</div>
+        <div class="lag-items">
+          <div class="lag-item red">
+            <div class="lag-bullet red"></div>
+            <div class="lag-text"><strong>Traffic Volume — 15× below Tata.</strong> Hyundai has 220K visits vs Tata's 3.3M. Both are top car brands in India. The gap is entirely due to SEO strategy, not brand popularity.</div>
+          </div>
+          <div class="lag-item red">
+            <div class="lag-bullet red"></div>
+            <div class="lag-text"><strong>Single URL Tracking.</strong> Hyundai.com/in only measures one URL. Tata, Maruti, Toyota, Honda all measure the entire domain including subdomains — giving them 10× more indexable content.</div>
+          </div>
+          <div class="lag-item red">
+            <div class="lag-bullet red"></div>
+            <div class="lag-text"><strong>No Model-Level Pages in Top Traffic.</strong> Honda's Elevate page alone gets 119K visits. Toyota's Hyryder page gets 361K. Hyundai has no model-specific page appearing in top traffic — a massive keyword opportunity missed.</div>
+          </div>
+          <div class="lag-item red">
+            <div class="lag-bullet red"></div>
+            <div class="lag-text"><strong>Traffic Value Far Below Market Share.</strong> Hyundai holds 15–17% of India's car market, but its $4.7K traffic value is 18× below Maruti's $84.9K. This means Hyundai is not capturing the online research traffic that leads to showroom visits.</div>
+          </div>
+          <div class="lag-item warn">
+            <div class="lag-bullet warn"></div>
+            <div class="lag-text"><strong>Flat Traffic Trend — No Growth.</strong> From Nov to March, Hyundai's line is flat at 220K while Tata grows from 3M to 3.6M. Hyundai is not investing in SEO content at scale.</div>
+          </div>
+          <div class="lag-item warn">
+            <div class="lag-bullet warn"></div>
+            <div class="lag-text"><strong>No Price/EMI Content Visible.</strong> Maruti has an Ertiga price page ranking high. Toyota has a Fortuner page. These "on-road price" searches have very high purchase intent. Hyundai.com has none in top results.</div>
+          </div>
+          <div class="lag-item green">
+            <div class="lag-bullet green"></div>
+            <div class="lag-text"><strong>Opportunity: Brand keyword volume is 223K/month.</strong> The search "hyundai" and "hyundai india" alone bring 244K monthly searches. Hyundai ranks #1 for these but fails to convert them into deeper page visits.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DEALER LAG -->
+      <div class="lag-card dealer">
+        <div class="lag-icon">🏠</div>
+        <div class="lag-who">Dealer Level — Coimbatore</div>
+        <div class="lag-title">Lotus Hyundai — Where It Lags</div>
+        <div class="lag-desc">lotushyundai.in is growing well with 444 visits/month and a sharp upward curve — but several gaps remain that are preventing 2× to 5× traffic growth in the next 90 days.</div>
+        <div class="lag-items">
+          <div class="lag-item green">
+            <div class="lag-bullet green"></div>
+            <div class="lag-text"><strong>Strong Foundation — Growing Fast.</strong> 444 visits/month with near-tripling from Nov to March. Creta + Venue on-road price pages are working. This is the right content strategy — needs to be expanded immediately.</div>
+          </div>
+          <div class="lag-item red">
+            <div class="lag-bullet red"></div>
+            <div class="lag-text"><strong>"Hyundai Showroom Coimbatore" — Not Ranking.</strong> This is the single most valuable local keyword (150 monthly searches, purchase intent). Kovai Hyundai ranks #6. Chandra ranks #8. Lotus does not appear in top 10 at all.</div>
+          </div>
+          <div class="lag-item red">
+            <div class="lag-bullet red"></div>
+            <div class="lag-text"><strong>Hyperlocal Domain Near Zero.</strong> lotus-hyundai-coimbatore.com has just 1 visit/month. This domain ranks #7 for "showroom in coimbatore" — but without content, that rank will be lost. Needs 5+ pages immediately.</div>
+          </div>
+          <div class="lag-item red">
+            <div class="lag-bullet red"></div>
+            <div class="lag-text"><strong>7 High-Traffic Model Pages Still Missing.</strong> Alcazar, Exter, Tucson, i20 N-Line, Verna — none have dedicated on-road price pages for Coimbatore. Each page = ~50–150 new monthly visits. Total opportunity: 500+ additional visits/month.</div>
+          </div>
+          <div class="lag-item warn">
+            <div class="lag-bullet warn"></div>
+            <div class="lag-text"><strong>No Service Centre Page.</strong> "Hyundai service center coimbatore" gets 150 monthly searches. Chandra ranks #3 for this. Lotus has no service centre landing page — leaving this high-intent traffic entirely to a competitor.</div>
+          </div>
+          <div class="lag-item warn">
+            <div class="lag-bullet warn"></div>
+            <div class="lag-text"><strong>Venue Brochure PDF Listed in Top Pages (14%).</strong> A PDF upload is ranking and sending traffic — not a proper webpage. This traffic is hard to convert and will fall once Google de-indexes the PDF. Replace with a proper Venue page.</div>
+          </div>
+          <div class="lag-item warn">
+            <div class="lag-bullet warn"></div>
+            <div class="lag-text"><strong>No EMI Calculator — 2,400 Monthly Searches Missed.</strong> "Hyundai EMI calculator" gets 2.4K monthly searches. No Hyundai dealer in Coimbatore offers this tool. First to publish it captures all 2,400 searches.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ COMPARISON TABLE ══ -->
+  <div class="sec-hdr">
+    <div class="sec-cat">Summary Table</div>
+    <div class="sec-title">All Brands — Quick Reference Traffic Table</div>
+    <div class="sec-desc">Key metrics at a glance. Click column headers to sort. Green = strong, Amber = needs work, Red = critical.</div>
+  </div>
+  <div class="comp-table-wrap">
+    <table class="comp-table" id="summaryTable">
+      <thead>
+        <tr>
+          <th>Brand</th>
+          <th>Category</th>
+          <th>Monthly Traffic</th>
+          <th>Traffic Value</th>
+          <th>Traffic Trend</th>
+          <th>Best KW Position</th>
+          <th>Own Website</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+</div><!-- /page-body -->
+
+<!-- FOOTER -->
+<footer class="page-footer">
+  <div class="pf-inner">
+    <div class="pf-note">Data Source: Ahrefs SEO Toolbar · Coimbatore Automotive Market · India · Nov 2025 – Mar 2026</div>
+    <div class="pf-links">
+      <a href="https://www.lotushyundai.in/" target="_blank" class="pf-link">lotushyundai.in</a>
+      <a href="https://chandratn.hyundaimotor.in/" target="_blank" class="pf-link">Chandra</a>
+      <a href="https://kovai.hyundaimotor.in/" target="_blank" class="pf-link">Kovai</a>
+      <a href="https://www.hyundai.com/in/en" target="_blank" class="pf-link">Hyundai India</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ════════════════════════════════════════════
+   DATE
+════════════════════════════════════════════ */
+document.getElementById('hDate').textContent = new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
+
+/* ════════════════════════════════════════════
+   MONTHS
+════════════════════════════════════════════ */
+const MONTHS = ['Nov 2025','Dec 2025','Jan 2026','Feb 2026','Mar 2026'];
+const M_SHORT = ['Nov','Dec','Jan','Feb','Mar'];
+
+/* ════════════════════════════════════════════
+   BRAND COLORS (CSS vars resolved)
+════════════════════════════════════════════ */
+const BC = {
+  tata:    '#0077aa',
+  maruti:  '#c54200',
+  toyota:  '#b71c1c',
+  honda:   '#1251a0',
+  hyundai: '#1b7f3a',
+  lotus:   '#d97b00',
+  chandra: '#6b21a8',
+  kovai:   '#9d174d',
+  lhl:     '#0055cc',
+  hmi:     '#64748b',
+};
+
+/* ════════════════════════════════════════════
+   TREND DATA
+   Estimated monthly progressions based on
+   Ahrefs charts (Nov → Mar trajectory).
+   National brands: values in thousands.
+   Local/HL: actual visit counts.
+════════════════════════════════════════════ */
+const DATA = {
+  // National (in thousands)
+  tata:    [3000, 3100, 3200, 3350, 3300],
+  maruti:  [2100, 2180, 2250, 2320, 2300],
+  toyota:  [1750, 1820, 1850, 1900, 1800],
+  honda:   [480,  560,  620,  700,  743],
+  hyundai: [210,  215,  218,  222,  221],
+  // Local (actual visits)
+  chandra: [150, 400, 350, 280, 184],
+  kovai:   [28,  35,  38,  42,  31],
+  // Hyperlocal (actual visits)
+  chl:     [2,   3,   3,   4,   3],
+  khl:     [5,   8,   12,  20,  10],
+  lhl:     [0,   0,   1,   1,   1],
+  // Own source (actual visits)
+  lotus:   [160, 200, 260, 800, 444],
+  hmi:     [18,  20,  22,  24,  23],
+};
+
+/* ════════════════════════════════════════════
+   POPUP LOGIC
+════════════════════════════════════════════ */
+const popup = document.getElementById('popup');
+const popMonth = document.getElementById('popMonth');
+const popTitle = document.getElementById('popTitle');
+const popRows  = document.getElementById('popRows');
+const popInsight = document.getElementById('popInsight');
+
+function showPopup(e, chartId, monthIdx, datasets, title, insight){
+  const mx = e.clientX, my = e.clientY;
+  const pw = 260, ph = 240;
+  let left = mx + 16;
+  let top  = my - 80;
+  if(left + pw > window.innerWidth - 20)  left = mx - pw - 16;
+  if(top  + ph > window.innerHeight - 20) top  = window.innerHeight - ph - 20;
+  if(top < 10) top = 10;
+
+  popup.style.left = left + 'px';
+  popup.style.top  = top  + 'px';
+
+  popMonth.textContent   = MONTHS[monthIdx];
+  popTitle.textContent   = title;
+  popInsight.textContent = insight;
+
+  let html = '';
+  datasets.forEach(d => {
+    const v = d.data[monthIdx];
+    const fmt = v >= 1000 ? (v/1000).toFixed(1)+'K' : v.toString();
+    html += `<div class="popup-row">
+      <div class="pr-dot" style="background:${d.color};"></div>
+      <span class="pr-name">${d.label}</span>
+      <span class="pr-val">${fmt}</span>
+    </div>`;
+  });
+  popRows.innerHTML = html;
+  popup.classList.add('visible');
+}
+
+function hidePopup(){ popup.classList.remove('visible'); }
+
+document.addEventListener('mousemove', e => {
+  if(popup.classList.contains('visible')){
+    const pw = 260, ph = 220;
+    let left = e.clientX + 16;
+    let top  = e.clientY - 80;
+    if(left + pw > window.innerWidth - 20)  left = e.clientX - pw - 16;
+    if(top  + ph > window.innerHeight - 20) top  = window.innerHeight - ph - 20;
+    if(top < 10) top = 10;
+    popup.style.left = left + 'px';
+    popup.style.top  = top  + 'px';
+  }
+});
+
+/* ════════════════════════════════════════════
+   CHART FACTORY
+════════════════════════════════════════════ */
+function makeChart(canvasId, datasets, yLabel, logScale, hoverTitle, getInsight){
+  const ctx = document.getElementById(canvasId).getContext('2d');
+
+  const chartData = {
+    labels: M_SHORT,
+    datasets: datasets.map(d => ({
+      label: d.label,
+      data:  d.data,
+      borderColor: d.color,
+      backgroundColor: d.color + '14',
+      borderWidth: 2.5,
+      pointRadius: 5,
+      pointHoverRadius: 8,
+      pointBackgroundColor: '#fff',
+      pointBorderColor: d.color,
+      pointBorderWidth: 2.5,
+      pointHoverBackgroundColor: d.color,
+      pointHoverBorderColor: '#fff',
+      pointHoverBorderWidth: 2,
+      tension: 0.42,
+      fill: false,
+    }))
+  };
+
+  const chart = new Chart(ctx, {
+    type: 'line',
+    data: chartData,
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          enabled: false,
+          external: (ctx2) => {
+            if(ctx2.tooltip.opacity === 0){ hidePopup(); return; }
+            const mi = ctx2.tooltip.dataPoints?.[0]?.dataIndex;
+            if(mi === undefined) return;
+            const evt = ctx2.chart.canvas.getBoundingClientRect();
+            const fakeEvt = {
+              clientX: evt.left + ctx2.tooltip.caretX,
+              clientY: evt.top  + ctx2.tooltip.caretY,
+            };
+            const insight = getInsight ? getInsight(mi) : '';
+            showPopup(fakeEvt, canvasId, mi, datasets, hoverTitle, insight);
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(0,0,0,.05)', lineWidth: 1 },
+          ticks: {
+            font: { family: 'DM Sans', size: 13, weight: '600' },
+            color: '#6b7f96',
+          }
+        },
+        y: {
+          type: logScale ? 'logarithmic' : 'linear',
+          grid: { color: 'rgba(0,0,0,.05)', lineWidth: 1 },
+          ticks: {
+            font: { family: 'DM Sans', size: 13, weight: '500' },
+            color: '#6b7f96',
+            callback: v => {
+              if(v >= 1000000) return (v/1000000).toFixed(1)+'M';
+              if(v >= 1000) return (v/1000).toFixed(0)+'K';
+              return v;
+            }
+          },
+          title: {
+            display: !!yLabel,
+            text: yLabel,
+            font: { family: 'DM Sans', size: 12, weight: '600' },
+            color: '#9aafc5',
+          }
+        }
+      },
+      animation: {
+        duration: 900,
+        easing: 'easeInOutQuart',
+      },
+      onHover: (evt) => {
+        if(evt.type === 'mouseout') hidePopup();
+      }
+    }
+  });
+
+  // Mouse leave = hide popup
+  document.getElementById(canvasId).addEventListener('mouseleave', hidePopup);
+  return chart;
+}
+
+/* ════════════════════════════════════════════
+   BUILD LEGEND
+════════════════════════════════════════════ */
+function buildLegend(legendId, datasets, chart){
+  const el = document.getElementById(legendId);
+  el.innerHTML = datasets.map((d,i) => `
+    <div class="legend-item" data-idx="${i}" onclick="toggleDataset('${legendId}',${i})">
+      <div class="legend-line" style="background:${d.color};"></div>
+      <span>${d.label}</span>
+    </div>`).join('');
+}
+
+const chartRefs = {};
+function toggleDataset(legendId, idx){
+  const chartId = legendId.replace('leg','c');
+  const chart = chartRefs[chartId];
+  if(!chart) return;
+  const meta = chart.getDatasetMeta(idx);
+  meta.hidden = !meta.hidden;
+  chart.update();
+  const items = document.querySelectorAll(`#${legendId} .legend-item`);
+  items[idx].style.opacity = meta.hidden ? '0.35' : '1';
+}
+
+/* ════════════════════════════════════════════
+   CHART 1 — NATIONAL
+════════════════════════════════════════════ */
+const natDS = [
+  {label:'Tata Motors',   data:DATA.tata,    color:BC.tata},
+  {label:'Maruti Suzuki', data:DATA.maruti,  color:BC.maruti},
+  {label:'Toyota Bharat', data:DATA.toyota,  color:BC.toyota},
+  {label:'Honda Cars',    data:DATA.honda,   color:BC.honda},
+  {label:'Hyundai India', data:DATA.hyundai, color:BC.hyundai},
+];
+const natInsights = [
+  'Tata at 3M — Hyundai at 210K. A 14× gap at the start.',
+  'Dec: Tata grows to 3.1M. Hyundai barely moves at 215K.',
+  'Jan: Honda begins accelerating. Hyundai stays flat.',
+  'Feb: Honda surges to 700K. Hyundai gap to competitors widens.',
+  'Mar: Final snapshot — Hyundai flatlines while others grow.',
+];
+chartRefs['c1'] = makeChart('c1', natDS, 'Monthly Visits', false, 'National Traffic',
+  mi => natInsights[mi]);
+buildLegend('leg1', natDS, chartRefs['c1']);
+
+/* ════════════════════════════════════════════
+   CHART 2 — LOCAL
+════════════════════════════════════════════ */
+const localDS = [
+  {label:'Chandra Hyundai (subdomain)', data:DATA.chandra, color:BC.chandra},
+  {label:'Kovai Hyundai (subdomain)',   data:DATA.kovai,   color:BC.kovai},
+];
+const localInsights = [
+  'Nov: Chandra leads at 150. Kovai at 28. Both subdomains only.',
+  'Dec: Chandra spikes to 400 — likely a seasonal/event push.',
+  'Jan: Chandra starts declining. Kovai inches up to 38.',
+  'Feb: Chandra continues falling. Kovai peaks at 42.',
+  'Mar: Chandra back to 184. Kovai drops to 31. Both flat again.',
+];
+chartRefs['c2'] = makeChart('c2', localDS, 'Monthly Visits', false, 'Local Competitors',
+  mi => localInsights[mi]);
+buildLegend('leg2', localDS, chartRefs['c2']);
+
+/* ════════════════════════════════════════════
+   CHART 3 — HYPERLOCAL
+════════════════════════════════════════════ */
+const hlDS = [
+  {label:'Chandra hyperlocal (chandra-hyundai-coimbatore.com)', data:DATA.chl, color:BC.chandra},
+  {label:'Kovai hyperlocal (kovai-hyundai-coimbatore.com)',     data:DATA.khl, color:BC.kovai},
+  {label:'Lotus hyperlocal (lotus-hyundai-coimbatore.com)',     data:DATA.lhl, color:BC.lhl},
+];
+const hlInsights = [
+  'Nov: All sites near zero. Nobody has content yet.',
+  'Dec: Kovai crawls up to 8. Lotus still at 0.',
+  'Jan: Kovai reaches 12. Lotus and Chandra unchanged.',
+  'Feb: Kovai peaks at 20 — still tiny but leads this micro-market.',
+  'Mar: All drop back. Lotus at 1 visit. First to add content wins.',
+];
+chartRefs['c3'] = makeChart('c3', hlDS, 'Monthly Visits', false, 'Hyperlocal Sites',
+  mi => hlInsights[mi]);
+buildLegend('leg3', hlDS, chartRefs['c3']);
+
+/* ════════════════════════════════════════════
+   CHART 4 — OWN SOURCE
+════════════════════════════════════════════ */
+const ownDS = [
+  {label:'lotushyundai.in (own website)',      data:DATA.lotus, color:BC.lotus},
+  {label:'lotus.hyundaimotor.in (HMI subdomain)', data:DATA.hmi, color:BC.hmi},
+];
+const ownInsights = [
+  'Nov: Website at 160 visits. Subdomain at 18. Own site leads.',
+  'Dec: Own site grows to 200. Creta page starts indexing.',
+  'Jan: Jump to 260 — Venue page picks up traction.',
+  'Feb: Big spike to 800 — Creta + Venue pages hit top positions.',
+  'Mar: Settles at 444 after peak. Upward trend is clear.',
+];
+chartRefs['c4'] = makeChart('c4', ownDS, 'Monthly Visits', false, 'Lotus Hyundai Sources',
+  mi => ownInsights[mi]);
+buildLegend('leg4', ownDS, chartRefs['c4']);
+
+/* ════════════════════════════════════════════
+   CHART 5 — ALL COMBINED (LOG SCALE)
+════════════════════════════════════════════ */
+const allDS = [
+  {label:'Tata Motors',      data:DATA.tata.map(v=>v*1000),    color:BC.tata},
+  {label:'Maruti Suzuki',    data:DATA.maruti.map(v=>v*1000),  color:BC.maruti},
+  {label:'Toyota Bharat',    data:DATA.toyota.map(v=>v*1000),  color:BC.toyota},
+  {label:'Honda Cars',       data:DATA.honda.map(v=>v*1000),   color:BC.honda},
+  {label:'Hyundai India',    data:DATA.hyundai.map(v=>v*1000), color:BC.hyundai},
+  {label:'Chandra (subdomain)', data:DATA.chandra,             color:BC.chandra},
+  {label:'Kovai (subdomain)',   data:DATA.kovai,               color:BC.kovai},
+  {label:'Kovai Hyperlocal',    data:DATA.khl,                 color:BC.kovai},
+  {label:'lotushyundai.in',     data:DATA.lotus,               color:BC.lotus},
+  {label:'Lotus HMI subdomain', data:DATA.hmi,                 color:BC.hmi},
+  {label:'Lotus Hyperlocal',    data:DATA.lhl.map(v=>Math.max(v,0.5)), color:BC.lhl},
+];
+const allInsights = [
+  'Nov: National brands 1000× larger than local players.',
+  'Dec: Gap remains. Honda begins climbing. Lotus own site stable.',
+  'Jan: Honda + Lotus own site both growing. Local brands flat.',
+  'Feb: Lotus own site spikes toward 800 — model pages working.',
+  'Mar: Final state — Lotus own site now visible on this chart.',
+];
+chartRefs['c5'] = makeChart('c5', allDS, 'Visits (Log Scale)', true, 'All Brands',
+  mi => allInsights[mi]);
+buildLegend('leg5', allDS, chartRefs['c5']);
+
+/* ════════════════════════════════════════════
+   SUMMARY TABLE
+════════════════════════════════════════════ */
+const tableRows = [
+  {brand:'Tata Motors',       color:BC.tata,    cat:'National',   traffic:'3.3M',   value:'$84.2K', trend:'up',   trendTxt:'▲ Growing',   bestPos:'#1 (multiple)',      hasSite:true,  status:'green', statusTxt:'Strong'},
+  {brand:'Maruti Suzuki',     color:BC.maruti,  cat:'National',   traffic:'2.3M',   value:'$84.9K', trend:'up',   trendTxt:'▲ Growing',   bestPos:'#1 (maruti)',        hasSite:true,  status:'green', statusTxt:'Strong'},
+  {brand:'Toyota Bharat',     color:BC.toyota,  cat:'National',   traffic:'1.8M',   value:'$71.2K', trend:'flat', trendTxt:'→ Stable',    bestPos:'#1 (toyota)',        hasSite:true,  status:'green', statusTxt:'Strong'},
+  {brand:'Honda Cars India',  color:BC.honda,   cat:'National',   traffic:'742.8K', value:'$25.8K', trend:'up',   trendTxt:'▲ Rising',    bestPos:'#1 (honda)',         hasSite:true,  status:'green', statusTxt:'Growing'},
+  {brand:'Hyundai India',     color:BC.hyundai, cat:'National',   traffic:'220.7K', value:'$4.7K',  trend:'flat', trendTxt:'→ Flat',      bestPos:'#1 (hyundai)',       hasSite:true,  status:'warn',  statusTxt:'Lagging'},
+  {brand:'Chandra Hyundai',   color:BC.chandra, cat:'Local',      traffic:'184',    value:'$21',    trend:'down', trendTxt:'▼ Declining', bestPos:'#3 (service center)',hasSite:false, status:'warn',  statusTxt:'Weak'},
+  {brand:'Kovai Hyundai',     color:BC.kovai,   cat:'Local',      traffic:'31',     value:'$6',     trend:'flat', trendTxt:'→ Flat',      bestPos:'#4 (service charges)',hasSite:false,status:'warn',  statusTxt:'Weak'},
+  {brand:'Chandra Hyperlocal',color:BC.chandra, cat:'Hyperlocal', traffic:'3',      value:'$1',     trend:'flat', trendTxt:'→ Flat',      bestPos:'#8 (showroom cbr)',  hasSite:true,  status:'red',   statusTxt:'Critical'},
+  {brand:'Kovai Hyperlocal',  color:BC.kovai,   cat:'Hyperlocal', traffic:'10',     value:'$3.5',   trend:'down', trendTxt:'▼ Dropped',   bestPos:'#7 (service center)',hasSite:true,  status:'red',   statusTxt:'Critical'},
+  {brand:'Lotus Hyperlocal',  color:BC.lhl,     cat:'Hyperlocal', traffic:'1',      value:'$0.59',  trend:'flat', trendTxt:'→ Near Zero', bestPos:'#7 (showroom cbr)',  hasSite:true,  status:'red',   statusTxt:'Critical'},
+  {brand:'lotushyundai.in',   color:BC.lotus,   cat:'Own Website',traffic:'444',    value:'$17',    trend:'up',   trendTxt:'▲ Strong',    bestPos:'#4 (creta price cbr)',hasSite:true, status:'green', statusTxt:'Growing'},
+  {brand:'lotus.hyundaimotor.in', color:BC.hmi, cat:'HMI Subdomain',traffic:'23',  value:'$0.46',  trend:'flat', trendTxt:'→ Flat',      bestPos:'#7 (service center)',hasSite:false, status:'warn',  statusTxt:'Weak'},
+];
+
+document.getElementById('tableBody').innerHTML = tableRows.map(r => `
+  <tr>
+    <td>
+      <div class="brand-cell">
+        <div class="brand-swatch" style="background:${r.color};"></div>
+        ${r.brand}
+      </div>
+    </td>
+    <td style="color:var(--muted);font-size:.82rem;">${r.cat}</td>
+    <td style="font-weight:700;font-size:.9rem;">${r.traffic}</td>
+    <td style="color:var(--gold);font-weight:600;">${r.value}</td>
+    <td class="${r.trend==='up'?'trend-up':r.trend==='down'?'trend-down':'trend-flat'}">${r.trendTxt}</td>
+    <td style="font-size:.82rem;color:var(--text2);">${r.bestPos}</td>
+    <td>${r.hasSite
+      ? '<span class="status-pill sp-green">✓ Yes</span>'
+      : '<span class="status-pill sp-red">✕ No</span>'}</td>
+    <td><span class="status-pill ${r.status==='green'?'sp-green':r.status==='red'?'sp-red':'sp-warn'}">${r.statusTxt}</span></td>
+  </tr>`).join('');
+</script>
+</body>
+</html>
